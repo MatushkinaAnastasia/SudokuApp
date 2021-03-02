@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SudokuApp"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="700">
+        Title="Судоку вместе" Height="450" Width="700">
     <Grid x:Name="main_grid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />

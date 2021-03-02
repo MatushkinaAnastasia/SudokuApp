@@ -14,9 +14,6 @@ using System.Windows.Shapes;
 
 namespace SudokuApp.Views
 {
-	/// <summary>
-	/// Логика взаимодействия для Menu.xaml
-	/// </summary>
 	public partial class Menu : Window
 	{
 		public Menu()
@@ -26,12 +23,16 @@ namespace SudokuApp.Views
 
 		private void CreateGame(object sender, RoutedEventArgs e)
 		{
-
+			var createRoom = new CreatingRoom();
+			createRoom.Show();
+			Close();
 		}
 
 		private void JoinToGame(object sender, RoutedEventArgs e)
 		{
-
+			var joinRoom = new JoiningRoom();
+			joinRoom.Show();
+			Close();
 		}
 
 		private void SingleGame(object sender, RoutedEventArgs e)
