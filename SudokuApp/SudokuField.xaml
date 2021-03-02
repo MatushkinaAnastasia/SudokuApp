@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:SudokuApp"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="700">
-    <Grid>
+    <Grid x:Name="main_grid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="200"/>
