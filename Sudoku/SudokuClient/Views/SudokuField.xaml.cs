@@ -1,9 +1,10 @@
-﻿using System.Data.SQLite;
+﻿using System.Configuration;
+using System.Data.SQLite;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace SudokuApp.Views
+namespace SudokuClient.Views
 {
 	public partial class SudokuField : Window
 	{
@@ -14,9 +15,11 @@ namespace SudokuApp.Views
 		{
 			InitializeComponent();
 
+			var path = UtilsLibrary.GetPath.MakePath("pathToDB");
+
 			_connectionString = new SQLiteConnectionStringBuilder
 			{
-				DataSource = @"C:\Users\nasya\source\repos\Sudoku\SudokuApp\data.sqlite",
+				DataSource = path,
 			}.ConnectionString;
 
 			_size = 9;
@@ -35,7 +38,7 @@ namespace SudokuApp.Views
 
 			conn.Open();
 			var numbers = (string)sCommand.ExecuteScalar();
-			
+
 			string[] nine_lines = numbers.Split('!');
 
 			var data = new int[_size, _size];
@@ -104,7 +107,7 @@ namespace SudokuApp.Views
 
 							if (value == "0")
 							{
-								text_box.Text = "";
+								text_box.Text = string.Empty;
 							}
 							else
 							{
@@ -135,7 +138,7 @@ namespace SudokuApp.Views
 		private void RandomField(object sender, RoutedEventArgs e)
 		{
 			grid.Children.Clear();
-			UpdateLayout();
+			grid.UpdateLayout();
 			_data = GetData();
 			CreateGrid();
 		}
