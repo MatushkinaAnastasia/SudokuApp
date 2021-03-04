@@ -5,7 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SudokuClient.Views"
         mc:Ignorable="d"
-        Title="Судоку вместе" Height="450" Width="700">
+        Title="Судоку вместе" 
+        Height="450" 
+        Width="700"
+        Loaded="WindowLoaded"
+        Closing="OnClosing">
     <Grid x:Name="main_grid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -38,10 +42,9 @@
                 Grid.Row="1"
                 Width="100"
                 Click="BackToMenu"/>
-        <Button Content="Другое поле"  
+        <Button Content=""  
                 Grid.Column="1"
                 Grid.Row="1"
-                Width="100"
-                Click="RandomField"/>
+                Width="100"/>
     </Grid>
 </Window>

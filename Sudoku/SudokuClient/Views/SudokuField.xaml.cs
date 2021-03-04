@@ -1,130 +1,129 @@
-﻿using System.Configuration;
-using System.Data.SQLite;
+﻿using SudokuClient.Tools;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
+using UtilsLibrary.Data;
+using UtilsLibrary.Servers;
 
 namespace SudokuClient.Views
 {
-	public partial class SudokuField : Window
+	public partial class SudokuField : Window, IMessageHandler
 	{
-		private readonly int _size;
-		private int[,] _data;
-		private readonly string _connectionString;
-		public SudokuField()
+		private const int _size = 9;
+		private SudokuCell[,] _data;
+		private TextBox[,] _tbs;
+		private readonly SocketClient _socketClient;
+
+		private readonly CancellationTokenSource _cancellationTokenSource;
+		private readonly SocketServer _socketServer;
+		private readonly IPAddress _ip;
+		private readonly int _port;
+
+		public SudokuField(SocketClient client)
 		{
 			InitializeComponent();
 
-			var path = UtilsLibrary.GetPath.MakePath("pathToDB");
+			_cancellationTokenSource = new CancellationTokenSource();
+			_ip = Dns.GetHostEntry(Dns.GetHostName()).AddressList[1];
+			_port = UtilsLibrary.NetworkUtils.GetFreePort();
+			_socketServer = new SocketServer(_ip, _port);
+			_socketClient = client;
 
-			_connectionString = new SQLiteConnectionStringBuilder
-			{
-				DataSource = path,
-			}.ConnectionString;
-
-			_size = 9;
-			_data = GetData();
-			CreateGrid();
+			Task.Run(() => _socketServer.Run(this, _cancellationTokenSource.Token));
 		}
 
-		private int[,] GetData()
+		private void WindowLoaded(object sender, RoutedEventArgs e)
 		{
-			using var conn = new SQLiteConnection(_connectionString);
-			var sCommand = new SQLiteCommand()
+			var ipBytes = _ip.GetAddressBytes();
+			var portBytes = BitConverter.GetBytes(_port);
+			var bytes = _socketClient.SendAndRecieve(new byte[] 
 			{
-				Connection = conn,
-				CommandText = @"SELECT numbers FROM sudoku_data ORDER BY RANDOM() LIMIT 1;"
-			};
+				0, 
+				ipBytes[0], ipBytes[1], ipBytes[2], ipBytes[3],
+				portBytes[0], portBytes[1], portBytes[2], portBytes[3],
+			});
+			_data = bytes.ConvertToSudokuCellArray();
+			_tbs = GridCreator.CreateGrid(grid, ValueChanging);
 
-			conn.Open();
-			var numbers = (string)sCommand.ExecuteScalar();
-
-			string[] nine_lines = numbers.Split('!');
-
-			var data = new int[_size, _size];
 			for (int i = 0; i < _size; i++)
 			{
-				var t = nine_lines[i];
 				for (int j = 0; j < _size; j++)
 				{
-					var symbol = t[j];
-					if (symbol != '*')
+					var tb = _tbs[i, j];
+
+					SudokuCell cell = _data[i, j];
+					if (cell.Value == 0)
 					{
-						data[i, j] = int.Parse(symbol.ToString());
+						tb.Text = string.Empty;
+					}
+					else if (cell.IsPermanent)
+					{
+						tb.Text = cell.Value.ToString();
+						tb.IsEnabled = false;
+						tb.Foreground = Brushes.Black;
+						tb.FontWeight = FontWeights.UltraBold;
+					}
+					else if (cell.Value > 0 && cell.Value <= 9)
+					{
+						tb.Text = cell.Value.ToString();
+					}
+					else
+					{
+						tb.Text = string.Empty;
 					}
 				}
-
 			}
-			return data;
 		}
 
-		private void CreateGrid()
+		private readonly Dictionary<Key, byte> _keys = new Dictionary<Key, byte>()
 		{
-			for (int i = 0; i < 3; i++)
+			{Key.D1, 1 },
+			{Key.D2, 2 },
+			{Key.D3, 3 },
+			{Key.D4, 4 },
+			{Key.D5, 5 },
+			{Key.D6, 6 },
+			{Key.D7, 7 },
+			{Key.D8, 8 },
+			{Key.D9, 9 },
+			{Key.NumPad1, 1 },
+			{Key.NumPad2, 2 },
+			{Key.NumPad3, 3 },
+			{Key.NumPad4, 4 },
+			{Key.NumPad5, 5 },
+			{Key.NumPad6, 6 },
+			{Key.NumPad7, 7 },
+			{Key.NumPad8, 8 },
+			{Key.NumPad9, 9 },
+		};
+
+		private void ValueChanging(TextBox textbox, KeyEventArgs e)
+		{
+			if (e.Key == Key.Back)
 			{
-				for (int j = 0; j < 3; j++)
-				{
-					var border = new Border
-					{
-						BorderBrush = Brushes.Black,
-						BorderThickness = new Thickness(1),
-					};
-					Grid.SetRow(border, i);
-					Grid.SetColumn(border, j);
-					grid.Children.Add(border);
+				// remove value;
+				// socket set 0;
+				return;
+			}
 
-					Grid little_grid = new Grid();
-					border.Child = little_grid;
-
-					for (int k = 0; k < 3; k++)
-					{
-						little_grid.RowDefinitions.Add(new RowDefinition());
-						little_grid.ColumnDefinitions.Add(new ColumnDefinition());
-					}
-
-					for (int a = 0; a < 3; a++)
-					{
-						for (int b = 0; b < 3; b++)
-						{
-							var little_border = new Border
-							{
-								BorderBrush = Brushes.Black,
-								BorderThickness = new Thickness(0.6),
-							};
-
-							var value = _data[i * 3 + a, j * 3 + b].ToString();
-
-							var text_box = new TextBox
-							{
-								TextAlignment = TextAlignment.Center,
-								HorizontalAlignment = HorizontalAlignment.Center,
-								VerticalAlignment = VerticalAlignment.Center,
-								FontSize = 24,
-								BorderThickness = new Thickness(0),
-								MaxLength = 1,
-								Width = 40,
-							};
-
-							if (value == "0")
-							{
-								text_box.Text = string.Empty;
-							}
-							else
-							{
-								text_box.Text = value;
-								text_box.IsEnabled = false;
-								text_box.Foreground = Brushes.Black;
-								text_box.FontWeight = FontWeights.UltraBold;
-							}
-
-							little_grid.Children.Add(little_border);
-							Grid.SetRow(little_border, a);
-							Grid.SetColumn(little_border, b);
-
-							little_border.Child = text_box;
-						}
-					}
-				}
+			if ((int)e.Key >= (int)Key.D1 && (int)e.Key <= (int)Key.D9
+				|| (int)e.Key >= (int)Key.NumPad1 && (int)e.Key <= (int)Key.NumPad9)
+			{
+				var parameters = textbox.Tag as TextBoxParametres;
+				var value = _keys[e.Key];
+				_socketClient.Send(new byte[] { 1, (byte)parameters.X, (byte)parameters.Y, value });
+				e.Handled = true;
+			}
+			else
+			{
+				e.Handled = true;
 			}
 		}
 
@@ -133,14 +132,53 @@ namespace SudokuClient.Views
 			var menu = new Menu();
 			menu.Show();
 			Close();
+			//TODO: сообщтить серверу о выходе.
 		}
 
-		private void RandomField(object sender, RoutedEventArgs e)
+		public void Handle(byte[] message, Socket socket)
 		{
-			grid.Children.Clear();
-			grid.UpdateLayout();
-			_data = GetData();
-			CreateGrid();
+			switch (message[0])
+			{
+				case 0:
+					{
+						// send table to client
+						//Console.WriteLine("Отправка таблицы подключившемуся клиенту");
+						//Console.WriteLine($"Длина таблицы {_data.Length}"); ;
+						//socket.Send(_data.ConvertToByteArray());
+						break;
+					}
+				case 1:
+					{
+						var x = message[1];
+						var y = message[2];
+						var value = message[3];
+						_data[x, y].Value = value;
+
+						Dispatcher.Invoke(() =>
+						{
+							if (value == 0)
+							{
+								_tbs[x, y].Text = string.Empty;
+							}
+							else
+							{
+								_tbs[x, y].Text = value.ToString();
+							}
+						});
+
+						break;
+					}
+				case 2:
+					{
+						break;
+					}
+				default: break;
+			}
+		}
+
+		private void OnClosing(object sender, System.ComponentModel.CancelEventArgs e)
+		{
+			_cancellationTokenSource.Cancel();
 		}
 	}
 }

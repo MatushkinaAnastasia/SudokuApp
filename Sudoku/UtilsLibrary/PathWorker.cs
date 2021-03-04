@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Configuration;
 
 namespace UtilsLibrary
 {
-	public static class GetPath
+	public static class PathWorker
 	{
-		public static string MakePath (string key)
+		public static string GetPath (string key)
 		{
 			var pathTo = ConfigurationManager.AppSettings.Get(key);
 			Console.WriteLine(pathTo);

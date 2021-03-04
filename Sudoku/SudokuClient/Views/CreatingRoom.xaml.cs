@@ -12,8 +12,8 @@ namespace SudokuClient.Views
 
         private void CreateRoom(object sender, RoutedEventArgs e)
         {
-            Communication.SendData();
-			var game = new SudokuField();
+            var socket = GameServerComm.RunGameServer();
+			var game = new SudokuField(socket);
 			game.Show();
 			Close();
 		}

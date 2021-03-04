@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 
-namespace GameServer
+namespace UtilsLibrary.Servers
 {
 	public interface IServer
 	{
