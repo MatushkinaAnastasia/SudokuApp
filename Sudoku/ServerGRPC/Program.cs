@@ -4,36 +4,37 @@ using Grpc.Reflection;
 using Grpc.Reflection.V1Alpha;
 using System.Configuration;
 using System.Threading.Tasks;
+using System.Net;
 
 namespace ServerGRPC
 {
 	class Program
 	{
-		public static void Main(string[] args)
+		public static async Task Main(string[] args)
 		{
-			//var ip = ConfigurationManager.AppSettings.Get("IP");
-			//int port = int.Parse(ConfigurationManager.AppSettings.Get("port"));
+			var ip = Dns.GetHostEntry(Dns.GetHostName()).AddressList[1];
+			int port = int.Parse(ConfigurationManager.AppSettings.Get("port"));
 
-			//var reflectionServiceImpl = new ReflectionServiceImpl(GradeCalculation.Descriptor, ServerReflection.Descriptor);
+			var reflectionServiceImpl = new ReflectionServiceImpl(ServersListMaker.Descriptor, ServerReflection.Descriptor);
 
-			//Server server = new Grpc.Core.Server
-			//{
-			//	Services =
-			//	{
-			//		GradeCalculation.BindService(new GradeCalculationService()), //для сервиса устанвливаем обработчик
-			//		ServerReflection.BindService(reflectionServiceImpl)
-			//	},
-			//	Ports = { new ServerPort(ip, port, ServerCredentials.Insecure) }
-			//};
-			//server.Start();
+			Grpc.Core.Server server = new Grpc.Core.Server
+			{
+				Services =
+				{
+					ServersListMaker.BindService(new ServersListMakerService()), //для сервиса устанвливаем обработчик
+					ServerReflection.BindService(reflectionServiceImpl)
+				},
+				Ports = { new ServerPort(ip.ToString(), port, ServerCredentials.Insecure) }
+			};
+			server.Start();
 
-			//Console.WriteLine($"[server is running on {ip}:{port}]");
-			//Console.WriteLine("[press any key to exit]");
-			//Console.ReadKey();
-			//Console.WriteLine("[server is closing...]");
-			//await server.ShutdownAsync();
-			//Console.WriteLine("[server is closed]");
-			//Console.ReadKey();
+			Console.WriteLine($"Сервер запущен по адресу {ip}:{port}");
+			Console.WriteLine("Нажмите любую клавишу для выхода");
+			Console.ReadKey();
+			Console.WriteLine("Сервер завершает работу");
+			await server.ShutdownAsync();
+			Console.WriteLine("Сервер закрыт");
+			Console.ReadKey();
 		}
 	}
 }

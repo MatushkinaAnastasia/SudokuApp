@@ -44,6 +44,6 @@
                 Width="150"
                 Height="30"
                 Content="ОК"
-                Click="CreateRoom"/>
+                Click="CreateRoomAsync"/>
     </Grid>
 </Window>

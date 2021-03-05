@@ -21,7 +21,7 @@ namespace GameServer
 		private const int _size = 9;
 		private SudokuCell[,] _data;
 
-		private List<Client> _clients;
+		private List<Client> _clients; //кункурентный лист сделать.
 
 		public Program(string ip, string port)
 		{
@@ -117,10 +117,6 @@ namespace GameServer
 
 				case 2:
 					{
-						//_data = GetData();
-						//Console.WriteLine("Отправка новой таблицы клиенту");
-						//Console.WriteLine($"Длина таблицы {_data.Length}"); ;
-						//socket.Send(UtilsLibrary.ArrayWorker.DoubleArrayToLinear(_data, _size)); 
 						break;
 					}
 				default: break;
