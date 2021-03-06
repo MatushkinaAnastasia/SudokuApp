@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 
 namespace SudokuClient.Views
 {
@@ -7,6 +8,7 @@ namespace SudokuClient.Views
 		public Menu()
 		{
 			InitializeComponent();
+			AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true); //нешифрованные данные
 		}
 
 		private void CreateGame(object sender, RoutedEventArgs e)

@@ -3,6 +3,7 @@ using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
+using UtilsLibrary.Servers;
 
 namespace SudokuClient.Views
 {
@@ -13,6 +14,12 @@ namespace SudokuClient.Views
             InitializeComponent();
             nameOfRoom.GotFocus += RemoveText;
             nameOfRoom.LostFocus += AddText;
+        }
+
+        ~CreatingRoom()
+		{
+            nameOfRoom.GotFocus -= RemoveText;
+            nameOfRoom.LostFocus -= AddText;
         }
 
         public void RemoveText(object sender, EventArgs e)
@@ -33,12 +40,26 @@ namespace SudokuClient.Views
 
         private async void CreateRoomAsync(object sender, RoutedEventArgs e)
         {
-            var socket = await GameServerComm.RunGameServerAsync(nameOfRoom.Text);
+            SocketClient socket = null;
+
+            try
+			{
+				socket = await GameServerComm.RunGameServerAsync(nameOfRoom.Text);
+            }
+			catch (Exception ex)
+			{
+                MessageBox.Show(ex.Message);
+			}
+            
 			var game = new SudokuField(socket);
 			game.Show();
 			Close();
 		}
 
-        
-    }
+		private void OnClosing(object sender, System.ComponentModel.CancelEventArgs e)
+		{
+            var menu = new Menu();
+            menu.Show();
+        }
+	}
 }

@@ -1,5 +1,8 @@
-﻿using System.Net;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Net;
 using System.Windows;
+using UtilsLibrary.Grpc;
 using UtilsLibrary.Servers;
 
 namespace SudokuClient.Views
@@ -7,27 +10,57 @@ namespace SudokuClient.Views
 	/// <summary>
 	/// Логика взаимодействия для ConnectingToGame.xaml
 	/// </summary>
-	public partial class JoiningRoom : Window
+	public partial class JoiningRoom : Window, INotifyPropertyChanged
 	{
 		public JoiningRoom()
 		{
 			InitializeComponent();
+			DataContext = this;
 		}
+
+		public ObservableCollection<Server> Servers { get; private set; }
+		public Server SelectedServer { get; set; }
+
+		public event PropertyChangedEventHandler PropertyChanged;
 
 		private void JoinToGame(object sender, RoutedEventArgs e)
 		{
-			var hostName = Dns.GetHostName();
-			//var ip = Dns.GetHostEntry(hostName).AddressList[1];
-			//var port = UtilsLibrary.NetworkUtils.GetFreePort();
-			//var port = 11000;
-			var ipport = tbip.Text.Split(":");
-			var ipS = ipport[0];
-			var portS = ipport[1];
-			var ip = IPAddress.Parse(ipS);
-			var port = int.Parse(portS);
+			if (SelectedServer == null)
+			{
+				MessageBox.Show("Выберите, пожалуйста, комнату :)");
+				return;
+			}
+			var ip = IPAddress.Parse(SelectedServer.Ip);
+			var port = int.Parse(SelectedServer.Port);
 			var client = new SocketClient(ip, port);
 			var game = new SudokuField(client);
 			game.Show();
+			Close();
+		}
+
+		private void WindowLoaded(object sender, RoutedEventArgs e)
+		{
+			 RefreshTable(null, null);
+		}
+
+		private async void RefreshTable(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				var servers = await ClientGrpc.GetServers();
+				Servers = new ObservableCollection<Server>(servers);
+			} 
+			catch
+			{
+				Servers = new ObservableCollection<Server>();
+				MessageBox.Show("Потеряна связь с сервером :(");
+			}
+		}
+
+		private void BackToMenu(object sender, RoutedEventArgs e)
+		{
+			var menu = new Menu();
+			menu.Show();
 			Close();
 		}
 	}

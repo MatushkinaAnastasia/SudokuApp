@@ -1,0 +1,26 @@
+﻿syntax = "proto3";
+
+service ServersListMaker {
+//здесь сообщаем серверу о создании новой комнаты, сервер должен добавить созданный сервер в список всех серверов
+  rpc AddServerToList (Server) returns (IsSuccecfull) {};
+  rpc ReturnServersList (RequestFromClient) returns (Servers) {};
+}
+
+message Server {
+  string ip = 1;
+  string port = 2;
+  string name = 3;
+}
+
+message Servers {
+  repeated Server servers = 1;
+}
+
+message IsSuccecfull {
+  string isSuccec = 1;
+}
+
+message RequestFromClient {
+  string reqArg = 1;
+}
+

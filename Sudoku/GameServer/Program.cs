@@ -21,7 +21,7 @@ namespace GameServer
 		private const int _size = 9;
 		private SudokuCell[,] _data;
 
-		private List<Client> _clients; //кункурентный лист сделать.
+		private List<Client> _clients; //TODO: кункурентный лист сделать.
 
 		public Program(string ip, string port)
 		{

@@ -2,6 +2,7 @@
 using System.Net;
 using UtilsLibrary.Servers;
 using System.Threading.Tasks;
+using System;
 
 namespace SudokuClient.Tools
 {
@@ -13,20 +14,27 @@ namespace SudokuClient.Tools
             var port = UtilsLibrary.NetworkUtils.GetFreePort();
             //var port = 11000;
             var path = UtilsLibrary.PathWorker.GetPath("pathToGameServer");
+			try
+			{
+                Process.Start(path, $"{ip} {port}");
+            }
+            catch
+			{
+                throw new Exception("Проблемы создания комнаты.");
+			}
 
-            Process.Start(path, $"{ip} {port}");
             var client = new SocketClient(ip, port);
-            await UtilsLibrary.Grpc.ClientGrpc.SendRoom(nameOfRoom, ip.ToString(), port.ToString());
+            
+			try
+			{
+                await UtilsLibrary.Grpc.ClientGrpc.SendRoom(nameOfRoom, ip.ToString(), port.ToString());
+            }
+            catch
+			{
+                throw new Exception("сервером.");
+			}
 
             return client;
         }
-
-		//отправить сообщение о запуске комнаты
-
-		//отправить сообщение об изменении ячейки судоку
-
-		//отправить сообщение об отсоединении клиента
-
-		//класс отвечает за отправку сообщений при помощи сокетов
 	}
 }

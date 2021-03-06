@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="Grpc\serversAppender.proto" GrpcServices="Both" />
+    <Protobuf Include="Grpc\serversStorage.proto" GrpcServices="Both" />
   </ItemGroup>
 
 </Project>

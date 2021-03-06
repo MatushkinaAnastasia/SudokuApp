@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SudokuClient.Views"
         mc:Ignorable="d"
-        Title="Выбор комнаты" Height="450" Width="800">
+        Title="Выбор комнаты" Height="450" Width="800"
+        Loaded="WindowLoaded">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="15"/>
@@ -18,9 +19,25 @@
             <RowDefinition Height="80"/>
         </Grid.RowDefinitions>
 
-        <DataGrid Grid.Row="0"
+        <ListView Grid.Row="0"
                   Grid.Column="1"
-                  GridLinesVisibility="All"/>
+                  ItemsSource="{Binding Servers}" 
+                  SelectionMode="Single"
+                  SelectedItem="{Binding SelectedServer}">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Название комнаты" 
+                                    Width="300"
+                                    DisplayMemberBinding="{Binding Name}"/>
+                    <GridViewColumn Header="IP" 
+                                    Width="200"
+                                    DisplayMemberBinding="{Binding Ip}"/>
+                    <GridViewColumn Header="Порт" 
+                                    Width="150"
+                                    DisplayMemberBinding="{Binding Port}"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
 
         <StackPanel Grid.Column="1"
                     Grid.Row="1"
@@ -29,6 +46,12 @@
                      Width="150"/>
             <Button Content="Присоединиться"
                     Click="JoinToGame"/>
+            <Button Content="↻"
+                    Click="RefreshTable"
+                    Width="90"
+                    FontSize="60"/>
+            <Button Content="Назад в меню"
+                    Click="BackToMenu"/>
         </StackPanel>
     </Grid>
 </Window>

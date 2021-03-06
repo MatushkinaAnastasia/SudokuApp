@@ -33,5 +33,12 @@ namespace ServerGRPC
 				return Task.FromResult(isSucces);
 			}
 		}
+
+		public override Task<Servers> ReturnServersList(RequestFromClient request, ServerCallContext context)
+		{
+			var result = new Servers();
+			result.Servers_.Add(_servers);
+			return Task.FromResult(result);
+		}
 	}
 }
