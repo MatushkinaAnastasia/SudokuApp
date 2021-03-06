@@ -12,7 +12,7 @@ namespace ServerGRPC
 	{
 		public static async Task Main(string[] args)
 		{
-			var ip = Dns.GetHostEntry(Dns.GetHostName()).AddressList[1];
+			var ip = UtilsLibrary.NetworkUtils.GetMyIp();
 			int port = int.Parse(ConfigurationManager.AppSettings.Get("port"));
 
 			var reflectionServiceImpl = new ReflectionServiceImpl(ServersListMaker.Descriptor, ServerReflection.Descriptor);

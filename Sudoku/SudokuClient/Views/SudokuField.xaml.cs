@@ -31,7 +31,7 @@ namespace SudokuClient.Views
 			InitializeComponent();
 
 			_cancellationTokenSource = new CancellationTokenSource();
-			_ip = Dns.GetHostEntry(Dns.GetHostName()).AddressList[1];
+			_ip = UtilsLibrary.NetworkUtils.GetMyIp();
 			_port = UtilsLibrary.NetworkUtils.GetFreePort();
 			_socketServer = new SocketServer(_ip, _port);
 			_socketClient = client;
@@ -81,6 +81,8 @@ namespace SudokuClient.Views
 				}
 			}
 		}
+
+
 
 		private readonly Dictionary<Key, byte> _keys = new Dictionary<Key, byte>()
 		{

@@ -17,7 +17,6 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Row="0"
@@ -28,17 +27,13 @@
 
         <TextBox Grid.Column="1"
                 Grid.Row="1"
+                Height="30"
+                Width="300"
+                Foreground="Gray"
                 Text="Название комнаты"
-                Height="30"
-                Width="300"
-                Foreground="Gray"/>
-
-        <TextBox Grid.Column="1"
-                Grid.Row="2"
-                Text="Пароль"
-                Height="30"
-                Width="300"
-                Foreground="Gray"/>
+                Name="nameOfRoom"/>
+        
+        
         <Button Grid.Column="1"
                 Grid.Row="3"
                 Width="150"

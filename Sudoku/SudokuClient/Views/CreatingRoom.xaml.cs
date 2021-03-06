@@ -1,6 +1,8 @@
 ﻿using SudokuClient.Tools;
+using System;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 
 namespace SudokuClient.Views
 {
@@ -9,15 +11,34 @@ namespace SudokuClient.Views
         public CreatingRoom()
         {
             InitializeComponent();
+            nameOfRoom.GotFocus += RemoveText;
+            nameOfRoom.LostFocus += AddText;
+        }
+
+        public void RemoveText(object sender, EventArgs e)
+        {
+            if (nameOfRoom.Text == "Название комнаты")
+            {
+                nameOfRoom.Text = "";
+                nameOfRoom.Foreground = Brushes.Black;
+            }
+        }
+
+        public void AddText(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(nameOfRoom.Text))
+                nameOfRoom.Text = "Название комнаты";
+            nameOfRoom.Foreground = Brushes.Gray;
         }
 
         private async void CreateRoomAsync(object sender, RoutedEventArgs e)
         {
-            var socket = GameServerComm.RunGameServer();
+            var socket = await GameServerComm.RunGameServerAsync(nameOfRoom.Text);
 			var game = new SudokuField(socket);
-            await UtilsLibrary.Grpc.ClientGrpc.SendRoom();
 			game.Show();
 			Close();
 		}
+
+        
     }
 }

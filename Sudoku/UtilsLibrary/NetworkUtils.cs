@@ -13,5 +13,11 @@ namespace UtilsLibrary
 			l.Stop();
 			return port;
 		}
+
+		public static IPAddress GetMyIp()
+		{
+			var ip = Dns.GetHostEntry(Dns.GetHostName()).AddressList[1];
+			return ip;
+		}
 	}
 }
