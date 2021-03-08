@@ -33,5 +33,11 @@ namespace SudokuClient.Views
 		{
 			Close();
 		}
+
+		private void OpenChat(object sender, RoutedEventArgs e)
+		{
+			var chat = new ChatWindow();
+			chat.Show();
+		}
 	}
 }

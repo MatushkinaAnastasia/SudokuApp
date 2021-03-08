@@ -33,6 +33,9 @@
             <Button Content="Правила"
                     Style="{StaticResource ButtonMenu}"
                     Click="ShowRules"/>
+            <Button Content="Чат"
+                    Style="{StaticResource ButtonMenu}"
+                    Click="OpenChat"/>
             <Button Content="Выход"
                     Style="{StaticResource ButtonMenu}"
                     Click="Exit"/>
