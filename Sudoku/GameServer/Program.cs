@@ -1,13 +1,16 @@
-﻿using System;
+﻿using GameServer.Tools;
+using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UtilsLibrary;
 using UtilsLibrary.Data;
 using UtilsLibrary.Servers;
+using UtilsLibrary.Tools;
 
 namespace GameServer
 {
@@ -16,6 +19,7 @@ namespace GameServer
 		private readonly CancellationTokenSource _cancellationTokenSource;
 		private readonly IPAddress _ip;
 		private readonly int _port;
+		private readonly string _nameOfRoom;
 
 		private readonly string _connectionString;
 		private const int _size = 9;
@@ -23,11 +27,12 @@ namespace GameServer
 
 		private List<Client> _clients; //TODO: кункурентный лист сделать.
 
-		public Program(string ip, string port)
+		public Program(string ip, string port, string nameOfRoom)
 		{
 			_cancellationTokenSource = new CancellationTokenSource();
 			_ip = IPAddress.Parse(ip);
 			_port = int.Parse(port);
+			_nameOfRoom = nameOfRoom.Replace("_", " ");
 			_clients = new List<Client>();
 
 			var path = PathWorker.GetPath("pathToDB");
@@ -41,7 +46,7 @@ namespace GameServer
 		#region lol
 		private static void Main(string[] args)
 		{
-			var program = new Program(args[0], args[1]);
+			var program = new Program(args[0], args[1], args[2]);
 			//var program = new Program("192.168.1.50", "11000");
 			Console.CancelKeyPress += (sender, e) =>
 			{
@@ -77,33 +82,24 @@ namespace GameServer
 		//работа с полученными данными
 		public void Handle(byte[] message, Socket socket)
 		{
-			var command = message[0];
+			var command = (GameServerProtocol)message[0];
 
 			switch (command)
 			{
-				case 0:
+				case GameServerProtocol.Init:
 					{
-						// send table to client
+						var client = GameServerProtocolWorker.GetClient(message, 1);
+						_clients.Add(client);
+
 						Console.WriteLine("Отправка таблицы подключившемуся клиенту");
-						Console.WriteLine($"Длина таблицы {_data.Length}"); ;
-						var ipB = new byte[4];
-						Array.Copy(message, 1, ipB, 0, 4);
-						var portB = new byte[4];
-						Array.Copy(message, 5, portB, 0, 4);
-
-						var ip = new IPAddress(ipB);
-						var port = BitConverter.ToInt32(portB, 0);
-
-						_clients.Add(new Client(ip, port));
-
-						socket.Send(_data.ConvertToByteArray());
+						var bytes = GameServerProtocolWorker.GetDataAndNameBytes(_data, _nameOfRoom);
+						socket.Send(bytes);
 						break;
 					}
-				case 1:
+				case GameServerProtocol.SetValue:
 					{
-						var x = message[1];
-						var y = message[2];
-						var value = message[3];
+						(var x, var y, var value) = GameServerProtocolWorker.GetXYValue(message, 1);
+						
 						if (value != 0) //проверка на пустое значение!
 						{
 							_data[x, y].Value = value;
@@ -114,8 +110,7 @@ namespace GameServer
 
 						break;
 					}
-
-				case 2:
+				case GameServerProtocol.Disconnect:
 					{
 						break;
 					}

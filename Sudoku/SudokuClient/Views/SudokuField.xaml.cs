@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using UtilsLibrary;
 using UtilsLibrary.Data;
 using UtilsLibrary.Servers;
 
@@ -31,8 +32,8 @@ namespace SudokuClient.Views
 			InitializeComponent();
 
 			_cancellationTokenSource = new CancellationTokenSource();
-			_ip = UtilsLibrary.NetworkUtils.GetMyIp();
-			_port = UtilsLibrary.NetworkUtils.GetFreePort();
+			_ip = NetworkUtils.GetMyIp();
+			_port = NetworkUtils.GetFreePort();
 			_socketServer = new SocketServer(_ip, _port);
 			_socketClient = client;
 
@@ -41,17 +42,20 @@ namespace SudokuClient.Views
 
 		private void WindowLoaded(object sender, RoutedEventArgs e)
 		{
-			var ipBytes = _ip.GetAddressBytes();
-			var portBytes = BitConverter.GetBytes(_port);
-			var bytes = _socketClient.SendAndRecieve(new byte[] 
-			{
-				0, 
-				ipBytes[0], ipBytes[1], ipBytes[2], ipBytes[3],
-				portBytes[0], portBytes[1], portBytes[2], portBytes[3],
-			});
-			_data = bytes.ConvertToSudokuCellArray();
-			_tbs = GridCreator.CreateGrid(grid, ValueChanging);
+			// Init field
+			var ipPortBytes = GameServerProtocolWorker.GetAddressBytes(_ip, _port);
 
+			var dataAndNameBytes = _socketClient.SendAndRecieve(ipPortBytes);
+
+			(var data, var nameOfRoom) = GameServerProtocolWorker.ConvertToSudokuCellArrayAndRoomName(dataAndNameBytes);
+			_data = data;
+			Title += $" - Комната: {nameOfRoom}";
+			_tbs = GridCreator.CreateGrid(grid, ValueChanging);
+			FillTextBoxesWithData();
+		}
+
+		private void FillTextBoxesWithData()
+		{
 			for (int i = 0; i < _size; i++)
 			{
 				for (int j = 0; j < _size; j++)
@@ -81,8 +85,6 @@ namespace SudokuClient.Views
 				}
 			}
 		}
-
-
 
 		private readonly Dictionary<Key, byte> _keys = new Dictionary<Key, byte>()
 		{

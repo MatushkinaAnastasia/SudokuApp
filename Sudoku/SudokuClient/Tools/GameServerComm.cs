@@ -12,11 +12,11 @@ namespace SudokuClient.Tools
 		{
             var ip = UtilsLibrary.NetworkUtils.GetMyIp();
             var port = UtilsLibrary.NetworkUtils.GetFreePort();
-            //var port = 11000;
             var path = UtilsLibrary.PathWorker.GetPath("pathToGameServer");
-			try
+
+            try
 			{
-                Process.Start(path, $"{ip} {port}");
+                Process.Start(path, $"{ip} {port} {nameOfRoom.Replace(" ", "_")}");
             }
             catch
 			{

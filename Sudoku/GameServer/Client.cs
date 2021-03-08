@@ -3,7 +3,7 @@ using UtilsLibrary.Servers;
 
 namespace GameServer
 {
-	internal class Client
+	public class Client
 	{
 		public Client(IPAddress ip, int port)
 		{
