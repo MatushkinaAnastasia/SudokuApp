@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -12,6 +13,7 @@ using System.Windows.Media;
 using UtilsLibrary;
 using UtilsLibrary.Data;
 using UtilsLibrary.Servers;
+using UtilsLibrary.Tools;
 
 namespace SudokuClient.Views
 {
@@ -183,6 +185,22 @@ namespace SudokuClient.Views
 		private void OnClosing(object sender, System.ComponentModel.CancelEventArgs e)
 		{
 			_cancellationTokenSource.Cancel();
+		}
+
+		private void SaveGame(object sender, RoutedEventArgs e)
+		{
+			var code = _socketClient.SendAndRecieve(new byte[] { (byte)GameServerProtocol.Save });
+			var codeString = Encoding.UTF8.GetString(code);
+			MessageBox.Show(codeString);
+		}
+
+		private void LoadGame(object sender, RoutedEventArgs e)
+		{
+			var data = _socketClient.SendAndRecieve(new byte[] { (byte)GameServerProtocol.Load });
+			_data = SudokuCellExtensions.ConvertToSudokuCellArray(data);
+			//MessageBox.Show(dataString.Length.ToString());
+			FillTextBoxesWithData();
+
 		}
 	}
 }

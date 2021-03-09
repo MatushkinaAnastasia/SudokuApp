@@ -56,13 +56,14 @@ namespace SudokuClient.Views
 
 		private void SendMessage(object sender, RoutedEventArgs e)
 		{
-			_client.Send(enterBox.Text);
+			_client.Send(enterBox.Text, _nickName);
 			enterBox.Text = "";
 		}
 
 		public void Handle(string message)
 		{
-			Dispatcher.Invoke(() => messagesBox.Text += "— " + message + '\n');
+			var arr = message.Split("`");
+			Dispatcher.Invoke(() => messagesBox.Text += $"({arr[1]}): {arr[0]} \n");
 		}
 
 		private void OnClosing(object sender, System.ComponentModel.CancelEventArgs e)

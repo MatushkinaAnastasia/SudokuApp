@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -24,6 +25,8 @@ namespace GameServer
 		private readonly string _connectionString;
 		private const int _size = 9;
 		private SudokuCell[,] _data;
+
+		private DateTime _lastSave = DateTime.Now;
 
 		private List<Client> _clients; //TODO: кункурентный лист сделать.
 
@@ -99,7 +102,7 @@ namespace GameServer
 				case GameServerProtocol.SetValue:
 					{
 						(var x, var y, var value) = GameServerProtocolWorker.GetXYValue(message, 1);
-						
+
 						if (value != 0) //проверка на пустое значение!
 						{
 							_data[x, y].Value = value;
@@ -114,8 +117,63 @@ namespace GameServer
 					{
 						break;
 					}
+				case GameServerProtocol.Save:
+					{
+						if ((DateTime.Now - _lastSave) > TimeSpan.FromSeconds(5))
+						{
+							//TODO: try catch! return 1 and 0
+							WriteDataToFile();
+						}
+						break;
+					}
+				case GameServerProtocol.Load:
+					{
+						var loadedData = LoadDataFromFile();
+						socket.Send(loadedData);
+					}
+					break;
 				default: break;
 			}
+		}
+
+		private byte[] LoadDataFromFile()
+		{
+			using var streamReader = new StreamReader("save.sudoku");
+			var data = streamReader.ReadToEnd();
+			var byteData = Encoding.UTF8.GetBytes(data);
+
+			if (byteData.Length != 0)
+			{
+				return byteData;
+			}
+			else
+			{
+				Console.WriteLine("Файл пустой!");
+				return null;
+			}
+
+			//var dataBytes = SudokuCellExtensions.ConvertToSudokuCellArray(byteData);
+
+			//if (dataBytes.Length != 0)
+			//{
+			//	return dataBytes;
+			//}
+			//else
+			//{
+			//	Console.WriteLine("Файл пустой!");
+			//	return null;
+			//}
+		}
+
+		private void WriteDataToFile()
+		{
+			//using var streamWriter = new StreamWriter($"{_nameOfRoom}-{_lastSave.ToString().Replace(":", "_")}.sudoku");
+			using var streamWriter = new StreamWriter("save.sudoku");
+			var data = SudokuCellExtensions.ConvertToByteArray(_data);
+			var stringData = Encoding.UTF8.GetString(data);
+			
+			streamWriter.Write(stringData);
+
 		}
 
 		private void SendMessageToAllClients(byte x, byte y, byte value)

@@ -36,7 +36,7 @@
                  Background="Gainsboro"
                  BorderThickness="1"
                  BorderBrush="Gray"
-                 Height="350"
+                 Height="320"
                  Width="300"
                  Name="messagesBox"
                  TextAlignment="Left"

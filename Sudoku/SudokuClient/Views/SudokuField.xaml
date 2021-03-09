@@ -42,9 +42,20 @@
                 Grid.Row="1"
                 Width="100"
                 Click="BackToMenu"/>
-        <Button Content=""  
-                Grid.Column="1"
-                Grid.Row="1"
-                Width="100"/>
+        <StackPanel Grid.Column="1"
+                    VerticalAlignment="Center">
+            <Button Content="Сохранить игру"  
+                Width="100"
+                Height="40"
+                Click="SaveGame"/>
+            <Button
+                Width="100"
+                Click="LoadGame" 
+                Height="60">
+                <TextBlock TextWrapping="Wrap"
+                           Text="Загрузить последнее сохранение"/>
+            </Button>
+        </StackPanel>
+
     </Grid>
 </Window>
