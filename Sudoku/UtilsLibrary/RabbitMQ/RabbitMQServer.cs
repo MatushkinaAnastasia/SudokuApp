@@ -11,9 +11,10 @@ namespace UtilsLibrary.RabbitMQ
 	public class RabbitMQServer
 	{
 		private readonly ConnectionFactory _factory;
-		public RabbitMQServer(string hostName)
+        private const string ChatExchange = "chex";
+        public RabbitMQServer(string hostName)
 		{
-			_factory = new ConnectionFactory() { HostName = hostName };
+			_factory = new ConnectionFactory() { HostName = hostName, UserName = "trrp4", Password = "trrp4"};
 		}
 
         public async void Run(IMessageHandler handler, CancellationToken cancellationToken)
@@ -21,7 +22,11 @@ namespace UtilsLibrary.RabbitMQ
             using var connection = _factory.CreateConnection();
             using var channel = connection.CreateModel();
 
-            channel.QueueDeclare("hello", false, false, false, null);
+            channel.ExchangeDeclare(exchange: ChatExchange, type: "fanout");
+
+            var queueName = channel.QueueDeclare().QueueName;
+
+            channel.QueueBind(queueName, ChatExchange, "");
 
             var consumer = new EventingBasicConsumer(channel);
 
@@ -33,7 +38,7 @@ namespace UtilsLibrary.RabbitMQ
             };
 
             var consumerTag = channel.BasicConsume(
-                queue: "hello",
+                queue: queueName,
                 autoAck: true,
                 consumer: consumer);
 

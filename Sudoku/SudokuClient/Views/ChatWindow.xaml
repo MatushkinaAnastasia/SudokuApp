@@ -5,29 +5,46 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SudokuClient.Views"
         mc:Ignorable="d"
-        Title="Чат" Height="450" Width="350"
+        Title="Чат" Height="500" Width="350"
         Closing="OnClosing">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
             <RowDefinition Height="70"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="50"/>
         </Grid.RowDefinitions>
 
-        <TextBox Grid.Row="0"
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="35"/>
+                <RowDefinition Height="35"/>
+            </Grid.RowDefinitions>
+
+            <TextBox Grid.Row="0"
+                     Width="200"
+                     Foreground="Gray"
+                     Text="Ваш никнейм для чата"
+                     Name="nickname"/>
+            <Button Grid.Row="1"
+                    Width="200"
+                    Content="Применить"
+                    Click="ApplyNickname"/>
+        </Grid>
+        
+        <TextBox Grid.Row="1"
                  IsReadOnly="True"
                  Background="Gainsboro"
                  BorderThickness="1"
                  BorderBrush="Gray"
-                 Height="340"
+                 Height="350"
                  Width="300"
-                 Margin="0 10 0 0"
                  Name="messagesBox"
                  TextAlignment="Left"
                  VerticalContentAlignment="Top"
                  Padding="5"/>
 
 
-        <Grid Grid.Row="1" 
+        <Grid Grid.Row="2" 
             HorizontalAlignment="Center">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200"/>
