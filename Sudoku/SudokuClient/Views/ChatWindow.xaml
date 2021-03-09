@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SudokuClient.Views"
         mc:Ignorable="d"
-        Title="Чат" Height="450" Width="350">
+        Title="Чат" Height="450" Width="350"
+        Closing="OnClosing">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
