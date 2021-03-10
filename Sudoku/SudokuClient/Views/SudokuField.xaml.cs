@@ -198,9 +198,24 @@ namespace SudokuClient.Views
 		{
 			var data = _socketClient.SendAndRecieve(new byte[] { (byte)GameServerProtocol.Load });
 			_data = SudokuCellExtensions.ConvertToSudokuCellArray(data);
-			//MessageBox.Show(dataString.Length.ToString());
-			FillTextBoxesWithData();
 
+			grid.Children.Clear();
+			UpdateLayout();
+			_tbs = GridCreator.CreateGrid(grid, ValueChanging);
+			FillTextBoxesWithData();
+		}
+
+		private void CheckAnswer(object sender, RoutedEventArgs e)
+		{
+			var check = _socketClient.SendAndRecieve(new byte[] { (byte)GameServerProtocol.Check });
+			if (Encoding.UTF8.GetString(check) == "0")
+			{
+				MessageBox.Show("Решение неверно");
+			}
+			else if (Encoding.UTF8.GetString(check) == "1")
+			{
+				MessageBox.Show("Решение верно! Поздравляем!");
+			}
 		}
 	}
 }

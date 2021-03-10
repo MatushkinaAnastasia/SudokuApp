@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -45,6 +46,7 @@ namespace GameServer
 			}.ConnectionString;
 			_data = GetData();
 		}
+
 
 		#region lol
 		private static void Main(string[] args)
@@ -132,15 +134,116 @@ namespace GameServer
 						socket.Send(loadedData);
 					}
 					break;
+				case GameServerProtocol.Check:
+					{
+						Console.WriteLine("Проверка ответов");
+						Console.WriteLine("Лог действий:");
+						var answer = Check();
+						Console.WriteLine($"Результат {answer}");
+						socket.Send(Encoding.UTF8.GetBytes(answer));
+						break;
+					}
 				default: break;
 			}
 		}
 
+		private string Check()
+		{
+			var arr = new byte[9];
+			Console.WriteLine("Массив строк");
+
+			//проверка строк
+			for (int i = 0; i < 9; i++)
+			{
+				for (int j = 0; j < 9; j++)
+				{
+					arr[j] = _data[i, j].Value;
+
+					Console.Write($" {arr[j]} ");
+				}
+				Console.WriteLine();
+				Console.WriteLine($"Отправленный массив: {arr[0]} {arr[1]} {arr[2]} {arr[3]} {arr[4]} {arr[5]} {arr[6]} {arr[7]}");
+				if (IsValid(arr) == false)
+				{
+					return "0";
+				}
+				arr = new byte[9];
+			}
+
+			//проверка столбцов
+			Console.WriteLine("Массив столбцов");
+			for (int i = 0; i < 9; i++)
+			{
+				for (int j = 0; j < 9; j++)
+				{
+					arr[j] = _data[j, i].Value;
+
+					Console.Write($" {arr[j]} ");
+				}
+
+				Console.WriteLine();
+				if (IsValid(arr) == false)
+				{
+					return "0";
+				}
+				arr = new byte[9];
+			}
+
+			//проверка чисел в трешках
+			Console.WriteLine("Ячейки в трешках");
+			for (int i = 0; i < 3; i++)
+			{
+				for (int j = 0; j < 3; j++)
+				{
+					var k = 0;
+					{
+						for (int a = 0; a < 3; a++)
+						{
+							for (int b = 0; b < 3; b++)
+							{
+								int x = i * 3 + a;
+								int y = j * 3 + b;
+								arr[k] = _data[x, y].Value;
+								Console.Write($" {arr[k]} ");
+								k++;
+							}
+						}
+					}
+					Console.WriteLine();
+					if (IsValid(arr) == false)
+					{
+						return "0";
+					}
+					arr = new byte[9];
+				}
+			}
+			return "1";
+
+		}
+
+		//проверяет повторяются ли числа в массиве
+		private bool IsValid(byte[] arr)
+		{
+			Console.WriteLine($"Полученный массив: {arr[0]} {arr[1]} {arr[2]} {arr[3]} {arr[4]} {arr[5]} {arr[6]} {arr[7]}");
+			for (int i = 0; i < arr.Length - 1; i++)
+			{
+				for (int j = i + 1; j < arr.Length; j++)
+				{
+					if (arr[i] == arr[j])
+					{
+						Console.WriteLine($"Элементы {arr[i]} и {arr[j]} не уникальны!");
+						return false;
+					}
+				}
+			}
+			return true;
+		}
 		private byte[] LoadDataFromFile()
 		{
 			using var streamReader = new StreamReader("save.sudoku");
 			var data = streamReader.ReadToEnd();
 			var byteData = Encoding.UTF8.GetBytes(data);
+			_data = SudokuCellExtensions.ConvertToSudokuCellArray(byteData);
 
 			if (byteData.Length != 0)
 			{
@@ -151,18 +254,6 @@ namespace GameServer
 				Console.WriteLine("Файл пустой!");
 				return null;
 			}
-
-			//var dataBytes = SudokuCellExtensions.ConvertToSudokuCellArray(byteData);
-
-			//if (dataBytes.Length != 0)
-			//{
-			//	return dataBytes;
-			//}
-			//else
-			//{
-			//	Console.WriteLine("Файл пустой!");
-			//	return null;
-			//}
 		}
 
 		private void WriteDataToFile()
@@ -171,7 +262,7 @@ namespace GameServer
 			using var streamWriter = new StreamWriter("save.sudoku");
 			var data = SudokuCellExtensions.ConvertToByteArray(_data);
 			var stringData = Encoding.UTF8.GetString(data);
-			
+
 			streamWriter.Write(stringData);
 
 		}
@@ -193,6 +284,7 @@ namespace GameServer
 			}
 		}
 
+
 		private SudokuCell[,] GetData() // TODO: вынести модуль с бд.
 		{
 			using var conn = new SQLiteConnection(_connectionString);
@@ -203,6 +295,7 @@ namespace GameServer
 			};
 
 			conn.Open();
+
 			var numbers = (string)sCommand.ExecuteScalar();
 
 			string[] nine_lines = numbers.Split('!');

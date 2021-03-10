@@ -57,5 +57,10 @@
             </Button>
         </StackPanel>
 
+        <Button Grid.Column="1"
+                Grid.Row="10"
+                Content="Проверить результат"
+                Click="CheckAnswer"/>
+
     </Grid>
 </Window>
