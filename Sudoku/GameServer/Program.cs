@@ -24,6 +24,7 @@ namespace GameServer
 		private readonly IPAddress _ip;
 		private readonly int _port;
 		private readonly string _nameOfRoom;
+		private readonly string _pathToFile;
 
 		private SudokuCell[,] _data;
 
@@ -31,19 +32,29 @@ namespace GameServer
 
 		private List<Client> _clients; //TODO: кункурентный лист сделать.
 
-		public Program(IPAddress ip, int port, string nameOfRoom)
+		public Program(IPAddress ip, int port, string nameOfRoom, string pathToFile)
 		{
 			_cancellationTokenSource = new CancellationTokenSource();
 			_ip = ip;
 			_port = port;
 			_nameOfRoom = nameOfRoom;
+			_pathToFile = pathToFile;
 			_clients = new List<Client>();
 
 			var path = PathWorker.GetPath("pathToDB");
 			var db = new DatabaseWorker(path);
-			
-			_data = db.GetData();
 
+			Console.WriteLine(_pathToFile);
+			if (string.IsNullOrEmpty(_pathToFile))
+			{
+				_data = db.GetData();
+			}
+			else
+			{
+				Console.WriteLine("errors?");
+				_data = LoadDataFromFile(_pathToFile);
+				Console.WriteLine("no errors");
+			}
 			AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true); //нешифрованные данные
 		}
 
@@ -53,7 +64,12 @@ namespace GameServer
 			var ip = IPAddress.Parse(args[0]);
 			var port = int.Parse(args[1]);
 			var nameOfRoom = args[2].Replace("_", " ");
-			var program = new Program(ip, port, nameOfRoom);
+			string pathToFile = null;
+			if (args.Length == 4)
+			{
+				pathToFile = args[3].Replace("?", " ");
+			}
+			var program = new Program(ip, port, nameOfRoom, pathToFile);
 
 			Console.CancelKeyPress += (sender, e) =>
 			{
@@ -125,8 +141,7 @@ namespace GameServer
 						if (value < 10)
 						{
 							_data[x, y].Value = value;
-							Console.WriteLine("Получено значение:");
-							Console.WriteLine($"x: {x} y: {y} value: {value}");
+							Console.WriteLine($"Получено значение - x: {x} y: {y} value: {value}");
 							SendMessageToAllClients(x, y, value);
 						}
 
@@ -154,7 +169,6 @@ namespace GameServer
 							}
 						}
 						
-
 						break;
 					}
 				case GameServerProtocol.Save:
@@ -167,19 +181,12 @@ namespace GameServer
 						}
 						break;
 					}
-				case GameServerProtocol.Load:
-					{
-						var loadedData = LoadDataFromFile();
-						socket.Send(loadedData);
-					}
-					break;
 				case GameServerProtocol.Check:
 					{
 						Console.WriteLine("Проверка ответов");
-						Console.WriteLine("Лог действий:");
 						var answer = Check();
 						Console.WriteLine($"Результат {answer}");
-						socket.Send(Encoding.UTF8.GetBytes(answer));
+						socket.Send(new byte[] { answer ? (byte)1 : (byte)0 });
 						break;
 					}
 				default: break;
@@ -205,10 +212,9 @@ namespace GameServer
 			}
 		}
 
-		private string Check()
+		private bool Check()
 		{
 			var arr = new byte[9];
-			Console.WriteLine("Массив строк");
 
 			//проверка строк
 			for (int i = 0; i < 9; i++)
@@ -216,67 +222,49 @@ namespace GameServer
 				for (int j = 0; j < 9; j++)
 				{
 					arr[j] = _data[i, j].Value;
-
-					Console.Write($" {arr[j]} ");
 				}
-				Console.WriteLine();
-				Console.WriteLine($"Отправленный массив: {arr[0]} {arr[1]} {arr[2]} {arr[3]} {arr[4]} {arr[5]} {arr[6]} {arr[7]}");
 				if (IsValid(arr) == false)
 				{
-					return "0";
+					return false;
 				}
-				arr = new byte[9];
 			}
 
 			//проверка столбцов
-			Console.WriteLine("Массив столбцов");
 			for (int i = 0; i < 9; i++)
 			{
 				for (int j = 0; j < 9; j++)
 				{
 					arr[j] = _data[j, i].Value;
-
-					Console.Write($" {arr[j]} ");
 				}
-
-				Console.WriteLine();
 				if (IsValid(arr) == false)
 				{
-					return "0";
+					return false;
 				}
-				arr = new byte[9];
 			}
 
 			//проверка чисел в трешках
-			Console.WriteLine("Ячейки в трешках");
 			for (int i = 0; i < 3; i++)
 			{
 				for (int j = 0; j < 3; j++)
 				{
 					var k = 0;
+					for (int a = 0; a < 3; a++)
 					{
-						for (int a = 0; a < 3; a++)
+						for (int b = 0; b < 3; b++)
 						{
-							for (int b = 0; b < 3; b++)
-							{
-								int x = i * 3 + a;
-								int y = j * 3 + b;
-								arr[k] = _data[x, y].Value;
-								Console.Write($" {arr[k]} ");
-								k++;
-							}
+							int x = i * 3 + a;
+							int y = j * 3 + b;
+							arr[k] = _data[x, y].Value;
+							k++;
 						}
 					}
-					Console.WriteLine();
 					if (IsValid(arr) == false)
 					{
-						return "0";
+						return false;
 					}
-					arr = new byte[9];
 				}
 			}
-			return "1";
-
+			return true;
 		}
 
 		//проверяет повторяются ли числа в массиве
@@ -296,22 +284,17 @@ namespace GameServer
 			}
 			return true;
 		}
-		private byte[] LoadDataFromFile()
+		private SudokuCell[,] LoadDataFromFile(string path)
 		{
-			using var streamReader = new StreamReader("save.sudoku");
+			using var streamReader = new StreamReader(path);
 			var data = streamReader.ReadToEnd();
 			var byteData = Encoding.UTF8.GetBytes(data);
-			_data = SudokuCellExtensions.ConvertToSudokuCellArray(byteData);
 
-			if (byteData.Length != 0)
-			{
-				return byteData;
-			}
-			else
+			if (byteData.Length == 0)
 			{
 				Console.WriteLine("Файл пустой!");
-				return null;
 			}
+			return SudokuCellExtensions.ConvertToSudokuCellArray(byteData);
 		}
 
 		private void WriteDataToFile()

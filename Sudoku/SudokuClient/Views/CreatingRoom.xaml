@@ -33,13 +33,24 @@
                 Foreground="Gray"
                 Text="Название комнаты"
                 Name="nameOfRoom"/>
-        
-        
-        <Button Grid.Column="1"
-                Grid.Row="3"
+
+        <StackPanel Grid.Row="3"
+                    Grid.Column="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Center">
+            <Button
                 Width="150"
                 Height="30"
-                Content="ОК"
-                Click="CreateRoom"/>
+                Content="Создать"
+                Click="CreateRoom"
+                ToolTip="Создать новую игру"/>
+            <Button
+                Width="150"
+                Height="30"
+                Content="Загрузить"
+                Click="LoadGame"
+                ToolTip="Загрузить игру из файла"/>
+        </StackPanel>
+
     </Grid>
 </Window>

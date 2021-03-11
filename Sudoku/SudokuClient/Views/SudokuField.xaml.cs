@@ -1,5 +1,7 @@
-﻿using SudokuClient.Tools;
+﻿using Microsoft.Win32;
+using SudokuClient.Tools;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -193,34 +195,29 @@ namespace SudokuClient.Views
 			_socketClient.Send(disconnect.Concat(ipPortBytes).ToArray());
 		}
 
-		private void SaveGame(object sender, RoutedEventArgs e)
-		{
-			var code = _socketClient.SendAndRecieve(new byte[] { (byte)GameServerProtocol.Save });
-			var codeString = Encoding.UTF8.GetString(code);
-			MessageBox.Show(codeString);
-		}
-
-		private void LoadGame(object sender, RoutedEventArgs e)
-		{
-			var data = _socketClient.SendAndRecieve(new byte[] { (byte)GameServerProtocol.Load });
-			_data = SudokuCellExtensions.ConvertToSudokuCellArray(data);
-
-			grid.Children.Clear();
-			UpdateLayout();
-			_tbs = GridCreator.CreateGrid(grid, ValueChanging);
-			FillTextBoxesWithData();
-		}
-
 		private void CheckAnswer(object sender, RoutedEventArgs e)
 		{
 			var check = _socketClient.SendAndRecieve(new byte[] { (byte)GameServerProtocol.Check });
-			if (Encoding.UTF8.GetString(check) == "0")
+			if (check[0] == 0)
 			{
 				MessageBox.Show("Решение неверно");
 			}
-			else if (Encoding.UTF8.GetString(check) == "1")
+			else if (check[0] == 1)
 			{
 				MessageBox.Show("Решение верно! Поздравляем!");
+			}
+		}
+
+		private void UnloadGame(object sender, RoutedEventArgs e)
+		{
+			var data = Encoding.UTF8.GetString(_data.ConvertToByteArray());
+			SaveFileDialog saveFileDialog = new SaveFileDialog
+			{
+				Filter = "Sudoku file (*.sudoku)|*.sudoku"
+			};
+			if (saveFileDialog.ShowDialog() == true)
+			{
+				File.WriteAllText(saveFileDialog.FileName, data);
 			}
 		}
 	}

@@ -43,18 +43,10 @@
                 Width="100"
                 Click="BackToMenu"/>
         <StackPanel Grid.Column="1"
-                    VerticalAlignment="Center">
+                    VerticalAlignment="Bottom">
             <Button Content="Сохранить игру"  
-                Width="100"
                 Height="40"
-                Click="SaveGame"/>
-            <Button
-                Width="100"
-                Click="LoadGame" 
-                Height="60">
-                <TextBlock TextWrapping="Wrap"
-                           Text="Загрузить последнее сохранение"/>
-            </Button>
+                Click="UnloadGame"/>
         </StackPanel>
 
         <Button Grid.Column="1"
