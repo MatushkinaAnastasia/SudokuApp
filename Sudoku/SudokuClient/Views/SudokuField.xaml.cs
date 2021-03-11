@@ -1,6 +1,6 @@
 ﻿using SudokuClient.Tools;
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -28,6 +28,7 @@ namespace SudokuClient.Views
 		private readonly SocketServer _socketServer;
 		private readonly IPAddress _ip;
 		private readonly int _port;
+		private string _nameOfRoom;
 
 		public SudokuField(SocketClient client)
 		{
@@ -45,13 +46,15 @@ namespace SudokuClient.Views
 		private void WindowLoaded(object sender, RoutedEventArgs e)
 		{
 			// Init field
+			var init = new byte[] { 0 };
 			var ipPortBytes = GameServerProtocolWorker.GetAddressBytes(_ip, _port);
 
-			var dataAndNameBytes = _socketClient.SendAndRecieve(ipPortBytes);
+			var dataAndNameBytes = _socketClient.SendAndRecieve(init.Concat(ipPortBytes).ToArray());
 
 			(var data, var nameOfRoom) = GameServerProtocolWorker.ConvertToSudokuCellArrayAndRoomName(dataAndNameBytes);
 			_data = data;
-			Title += $" - Комната: {nameOfRoom}";
+			_nameOfRoom = nameOfRoom;
+			Title += $" - Комната: {_nameOfRoom}";
 			_tbs = GridCreator.CreateGrid(grid, ValueChanging);
 			FillTextBoxesWithData();
 		}
@@ -112,24 +115,21 @@ namespace SudokuClient.Views
 
 		private void ValueChanging(TextBox textbox, KeyEventArgs e)
 		{
-			if (e.Key == Key.Back)
-			{
-				// remove value;
-				// socket set 0;
-				return;
-			}
+			var parameters = textbox.Tag as TextBoxParametres;
+			e.Handled = true;
 
-			if ((int)e.Key >= (int)Key.D1 && (int)e.Key <= (int)Key.D9
-				|| (int)e.Key >= (int)Key.NumPad1 && (int)e.Key <= (int)Key.NumPad9)
+			if (e.Key == Key.Back || e.Key == Key.Delete)
 			{
-				var parameters = textbox.Tag as TextBoxParametres;
-				var value = _keys[e.Key];
-				_socketClient.Send(new byte[] { 1, (byte)parameters.X, (byte)parameters.Y, value });
-				e.Handled = true;
+				_socketClient.Send(new byte[] { 1, parameters.X, parameters.Y, 0 });
 			}
 			else
 			{
-				e.Handled = true;
+				if ((int)e.Key >= (int)Key.D1 && (int)e.Key <= (int)Key.D9
+				|| (int)e.Key >= (int)Key.NumPad1 && (int)e.Key <= (int)Key.NumPad9)
+				{
+					var value = _keys[e.Key];
+					_socketClient.Send(new byte[] { 1, parameters.X, parameters.Y, value });
+				}
 			}
 		}
 
@@ -147,10 +147,11 @@ namespace SudokuClient.Views
 			{
 				case 0:
 					{
-						// send table to client
-						//Console.WriteLine("Отправка таблицы подключившемуся клиенту");
-						//Console.WriteLine($"Длина таблицы {_data.Length}"); ;
-						//socket.Send(_data.ConvertToByteArray());
+						Dispatcher.Invoke(() =>
+						{
+							MessageBox.Show("Сервер разорвал соединение.");
+						});
+						Close();
 						break;
 					}
 				case 1:
@@ -176,6 +177,7 @@ namespace SudokuClient.Views
 					}
 				case 2:
 					{
+						_socketClient.Send(new byte[] { 0 });
 						break;
 					}
 				default: break;
@@ -185,6 +187,10 @@ namespace SudokuClient.Views
 		private void OnClosing(object sender, System.ComponentModel.CancelEventArgs e)
 		{
 			_cancellationTokenSource.Cancel();
+			var disconnect = new byte[] { (byte)GameServerProtocol.Disconnect };
+			var ipPortBytes = GameServerProtocolWorker.GetAddressBytes(_ip, _port);
+
+			_socketClient.Send(disconnect.Concat(ipPortBytes).ToArray());
 		}
 
 		private void SaveGame(object sender, RoutedEventArgs e)

@@ -39,17 +39,18 @@ namespace SudokuClient.Views
 
 		private bool _isGameStarted = false;
 
-		private async void CreateRoomAsync(object sender, RoutedEventArgs e)
+		private void CreateRoom(object sender, RoutedEventArgs e)
 		{
-			SocketClient socket = null;
-
+			SocketClient socket;
 			try
 			{
-				socket = await GameServerComm.RunGameServerAsync(nameOfRoom.Text);
+				socket = GameServerComm.RunGameServer(nameOfRoom.Text);
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show(ex.Message);
+				MessageBox.Show("Проблемы создания комнаты. Проверьте путь до gameserver.exe в конфигурационном файле.");
+				Console.WriteLine(ex.Message);
+				return;
 			}
 
 			var game = new SudokuField(socket);

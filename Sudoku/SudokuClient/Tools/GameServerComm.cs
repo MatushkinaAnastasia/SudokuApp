@@ -1,39 +1,20 @@
 ﻿using System.Diagnostics;
-using System.Net;
 using UtilsLibrary.Servers;
-using System.Threading.Tasks;
-using System;
+using UtilsLibrary;
 
 namespace SudokuClient.Tools
 {
 	public static class GameServerComm
     {
-        public static async Task<SocketClient> RunGameServerAsync(string nameOfRoom)
+        public static SocketClient RunGameServer(string nameOfRoom)
 		{
-            var ip = UtilsLibrary.NetworkUtils.GetMyIp();
-            var port = UtilsLibrary.NetworkUtils.GetFreePort();
-            var path = UtilsLibrary.PathWorker.GetPath("pathToGameServer");
+            var ip = NetworkUtils.GetMyIp();
+            var port = NetworkUtils.GetFreePort();
 
-            try
-			{
-                Process.Start(path, $"{ip} {port} {nameOfRoom.Replace(" ", "_")}");
-            }
-            catch
-			{
-                throw new Exception("Проблемы создания комнаты.");
-			}
+            var path = PathWorker.GetPath("pathToGameServer");
+            Process.Start(path, $"{ip} {port} {nameOfRoom.Replace(" ", "_")}");
 
             var client = new SocketClient(ip, port);
-            
-			try
-			{
-                await UtilsLibrary.Grpc.ClientGrpc.SendRoom(nameOfRoom, ip.ToString(), port.ToString());
-            }
-            catch
-			{
-                throw new Exception("сервером.");
-			}
-
             return client;
         }
 	}

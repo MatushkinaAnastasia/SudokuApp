@@ -15,9 +15,9 @@ namespace SudokuClient.Tools
 			const int _size = 9;
 			var tbs = new TextBox[_size, _size];
 
-			for (int i = 0; i < 3; i++)
+			for (byte i = 0; i < 3; i++)
 			{
-				for (int j = 0; j < 3; j++)
+				for (byte j = 0; j < 3; j++)
 				{
 					var border = new Border
 					{
@@ -37,9 +37,9 @@ namespace SudokuClient.Tools
 						little_grid.ColumnDefinitions.Add(new ColumnDefinition());
 					}
 
-					for (int a = 0; a < 3; a++)
+					for (byte a = 0; a < 3; a++)
 					{
-						for (int b = 0; b < 3; b++)
+						for (byte b = 0; b < 3; b++)
 						{
 							var little_border = new Border
 							{
@@ -48,8 +48,8 @@ namespace SudokuClient.Tools
 							};
 
 
-							int x = i * 3 + a;
-							int y = j * 3 + b;
+							byte x = (byte)(i * 3 + a);
+							byte y = (byte)(j * 3 + b);
 
 							var text_box = new TextBox
 							{

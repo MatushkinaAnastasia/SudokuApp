@@ -64,7 +64,8 @@ namespace UtilsLibrary.Servers
             }
             catch (SocketException se)
             {
-                Console.WriteLine("SocketException : {0}", se.ToString());
+                //Console.WriteLine("SocketException : {0}", se.ToString());
+                throw;
             }
             catch (Exception e)
             {

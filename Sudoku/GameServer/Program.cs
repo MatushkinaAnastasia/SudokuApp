@@ -1,4 +1,5 @@
 ﻿using GameServer.Tools;
+using Grpc.Net.Client;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
@@ -11,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UtilsLibrary;
 using UtilsLibrary.Data;
+using UtilsLibrary.Grpc;
 using UtilsLibrary.Servers;
 using UtilsLibrary.Tools;
 
@@ -23,36 +25,36 @@ namespace GameServer
 		private readonly int _port;
 		private readonly string _nameOfRoom;
 
-		private readonly string _connectionString;
-		private const int _size = 9;
 		private SudokuCell[,] _data;
 
 		private DateTime _lastSave = DateTime.Now;
 
 		private List<Client> _clients; //TODO: кункурентный лист сделать.
 
-		public Program(string ip, string port, string nameOfRoom)
+		public Program(IPAddress ip, int port, string nameOfRoom)
 		{
 			_cancellationTokenSource = new CancellationTokenSource();
-			_ip = IPAddress.Parse(ip);
-			_port = int.Parse(port);
-			_nameOfRoom = nameOfRoom.Replace("_", " ");
+			_ip = ip;
+			_port = port;
+			_nameOfRoom = nameOfRoom;
 			_clients = new List<Client>();
 
 			var path = PathWorker.GetPath("pathToDB");
-			_connectionString = new SQLiteConnectionStringBuilder
-			{
-				DataSource = path,
-			}.ConnectionString;
-			_data = GetData();
+			var db = new DatabaseWorker(path);
+			
+			_data = db.GetData();
+
+			AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true); //нешифрованные данные
 		}
 
-
-		#region lol
+		// entry point of program
 		private static void Main(string[] args)
 		{
-			var program = new Program(args[0], args[1], args[2]);
-			//var program = new Program("192.168.1.50", "11000");
+			var ip = IPAddress.Parse(args[0]);
+			var port = int.Parse(args[1]);
+			var nameOfRoom = args[2].Replace("_", " ");
+			var program = new Program(ip, port, nameOfRoom);
+
 			Console.CancelKeyPress += (sender, e) =>
 			{
 				try
@@ -65,6 +67,8 @@ namespace GameServer
 				}
 			};
 			program.Run();
+			Console.WriteLine("PRESS ANY KEY TO EXIT");
+			Console.ReadKey();
 		}
 
 		public void Run()
@@ -75,6 +79,18 @@ namespace GameServer
 			Console.WriteLine("Сервер находится по адресу:" + _ip + ":" + _port);
 			Console.WriteLine("Сервер в режиме ожидания");
 
+			// say gRPC server to add me to list of servers
+			Task.Run(async () =>
+			{
+				try
+				{
+					Console.WriteLine("SendRoom start...");
+					var result = await ClientGrpc.SendRoom(_nameOfRoom, _ip.ToString(), _port.ToString());
+					Console.WriteLine("SendRoom success.");
+				}
+				catch { Console.WriteLine("SendRoom error"); }
+			});
+
 			Task.WaitAll(task);
 		}
 
@@ -82,7 +98,6 @@ namespace GameServer
 		{
 			_cancellationTokenSource.Cancel();
 		}
-		#endregion
 
 		//работа с полученными данными
 		public void Handle(byte[] message, Socket socket)
@@ -91,21 +106,23 @@ namespace GameServer
 
 			switch (command)
 			{
-				case GameServerProtocol.Init:
+				case GameServerProtocol.Init: //Connect
 					{
 						var client = GameServerProtocolWorker.GetClient(message, 1);
+						Console.WriteLine($"Клиент подключился. ip: {client.IP}, port: {client.Port}");
 						_clients.Add(client);
 
-						Console.WriteLine("Отправка таблицы подключившемуся клиенту");
 						var bytes = GameServerProtocolWorker.GetDataAndNameBytes(_data, _nameOfRoom);
+						Console.WriteLine("Отправка таблицы подключившемуся клиенту");
 						socket.Send(bytes);
+						Console.WriteLine("Таблица отправлена.");
 						break;
 					}
 				case GameServerProtocol.SetValue:
 					{
 						(var x, var y, var value) = GameServerProtocolWorker.GetXYValue(message, 1);
 
-						if (value != 0) //проверка на пустое значение!
+						if (value < 10)
 						{
 							_data[x, y].Value = value;
 							Console.WriteLine("Получено значение:");
@@ -117,6 +134,27 @@ namespace GameServer
 					}
 				case GameServerProtocol.Disconnect:
 					{
+						var client = GameServerProtocolWorker.GetClient(message, 1);
+						var myClient = _clients.FirstOrDefault(x => x.IsEquals(client));
+						if (myClient != null)
+						{
+							try
+							{
+								var reply = myClient.SocketClient.SendAndRecieve(new byte[] { 2 });
+								if (reply[0] == 0)
+								{
+									break;
+								}
+							}
+							catch { }
+							finally
+							{
+								_clients.Remove(myClient);
+								CheckClients();
+							}
+						}
+						
+
 						break;
 					}
 				case GameServerProtocol.Save:
@@ -125,6 +163,7 @@ namespace GameServer
 						{
 							//TODO: try catch! return 1 and 0
 							WriteDataToFile();
+							_lastSave = DateTime.Now;
 						}
 						break;
 					}
@@ -144,6 +183,25 @@ namespace GameServer
 						break;
 					}
 				default: break;
+			}
+		}
+
+		private async void CheckClients()
+		{
+			Console.WriteLine($"clients count: {_clients.Count}");
+
+			if (_clients.Count == 0)
+			{
+				await Task.Run(async () =>
+				{
+					try
+					{
+						await ClientGrpc.DeleteServer(_nameOfRoom, _ip.ToString(), _port.ToString());
+					}
+					catch { }
+				});
+
+				Cancel();
 			}
 		}
 
@@ -282,47 +340,6 @@ namespace GameServer
 					_clients.Remove(client);
 				}
 			}
-		}
-
-
-		private SudokuCell[,] GetData() // TODO: вынести модуль с бд.
-		{
-			using var conn = new SQLiteConnection(_connectionString);
-			var sCommand = new SQLiteCommand()
-			{
-				Connection = conn,
-				CommandText = @"SELECT numbers FROM sudoku_data ORDER BY RANDOM() LIMIT 1;"
-			};
-
-			conn.Open();
-
-			var numbers = (string)sCommand.ExecuteScalar();
-
-			string[] nine_lines = numbers.Split('!');
-
-			var data = new SudokuCell[_size, _size];
-			for (byte i = 0; i < _size; i++)
-			{
-				var t = nine_lines[i];
-				for (byte j = 0; j < _size; j++)
-				{
-					var symbol = t[j];
-					SudokuCell cell;
-
-					if (symbol != '*')
-					{
-						cell = new SudokuCell(i, j, byte.Parse(symbol.ToString()), true);
-					}
-					else
-					{
-						cell = new SudokuCell(i, j, 0, false);
-					}
-
-					data[i, j] = cell;
-				}
-
-			}
-			return data;
 		}
 	}
 }

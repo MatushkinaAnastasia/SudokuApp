@@ -33,7 +33,7 @@ namespace SudokuClient.Views
 			var ip = IPAddress.Parse(SelectedServer.Ip);
 			var port = int.Parse(SelectedServer.Port);
 			var client = new SocketClient(ip, port);
-			var game = new SudokuField(client);
+			var game = new SudokuField(client); //todo: trycatch заход на несуществующий сервер
 			game.Show();
 			Close();
 		}

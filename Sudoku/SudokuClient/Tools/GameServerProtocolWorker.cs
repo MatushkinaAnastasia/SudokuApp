@@ -14,7 +14,6 @@ namespace SudokuClient.Tools
 			var portBytes = BitConverter.GetBytes(port);
 			return new byte[]
 			{
-				0,
 				ipBytes[0], ipBytes[1], ipBytes[2], ipBytes[3],
 				portBytes[0], portBytes[1], portBytes[2], portBytes[3],
 			};
