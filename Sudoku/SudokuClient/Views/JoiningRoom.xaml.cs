@@ -12,9 +12,13 @@ namespace SudokuClient.Views
 	/// </summary>
 	public partial class JoiningRoom : Window, INotifyPropertyChanged
 	{
+		private readonly ClientGrpc _clientGrpc;
+
 		public JoiningRoom()
 		{
 			InitializeComponent();
+			_clientGrpc = new ClientGrpc();
+
 			DataContext = this;
 		}
 
@@ -47,7 +51,7 @@ namespace SudokuClient.Views
 		{
 			try
 			{
-				var servers = await ClientGrpc.GetServers();
+				var servers = await _clientGrpc.GetServers();
 				Servers = new ObservableCollection<Server>(servers);
 			} 
 			catch

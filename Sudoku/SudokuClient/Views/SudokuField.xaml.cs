@@ -140,7 +140,6 @@ namespace SudokuClient.Views
 			var menu = new Menu();
 			menu.Show();
 			Close();
-			//TODO: сообщтить серверу о выходе.
 		}
 
 		public void Handle(byte[] message, Socket socket)

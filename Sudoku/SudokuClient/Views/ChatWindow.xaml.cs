@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Configuration;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
@@ -24,8 +25,7 @@ namespace SudokuClient.Views
 			nickname.GotFocus += RemoveText;
 			nickname.LostFocus += AddText;
 
-			var hostName = NetworkUtils.GetMyIp().ToString();
-			//TODO: брать айпи из конфига
+			var hostName = ConfigurationManager.AppSettings.Get("Ip_MQ");
 			_server = new RabbitMQServer(hostName);
 			_client = new RabbitMQClient(hostName);
 			_cancellationTokenSource = new CancellationTokenSource();

@@ -26,6 +26,8 @@ namespace GameServer
 		private readonly string _nameOfRoom;
 		private readonly string _pathToFile;
 
+		private readonly ClientGrpc _clientGrpc;
+
 		private SudokuCell[,] _data;
 
 		private DateTime _lastSave = DateTime.Now;
@@ -40,6 +42,7 @@ namespace GameServer
 			_nameOfRoom = nameOfRoom;
 			_pathToFile = pathToFile;
 			_clients = new List<Client>();
+			_clientGrpc = new ClientGrpc();
 
 			var path = PathWorker.GetPath("pathToDB");
 			var db = new DatabaseWorker(path);
@@ -101,7 +104,7 @@ namespace GameServer
 				try
 				{
 					Console.WriteLine("SendRoom start...");
-					var result = await ClientGrpc.SendRoom(_nameOfRoom, _ip.ToString(), _port.ToString());
+					var result = await _clientGrpc.SendRoom(_nameOfRoom, _ip.ToString(), _port.ToString());
 					Console.WriteLine("SendRoom success.");
 				}
 				catch { Console.WriteLine("SendRoom error"); }
@@ -203,7 +206,7 @@ namespace GameServer
 				{
 					try
 					{
-						await ClientGrpc.DeleteServer(_nameOfRoom, _ip.ToString(), _port.ToString());
+						await _clientGrpc.DeleteServer(_nameOfRoom, _ip.ToString(), _port.ToString());
 					}
 					catch { }
 				});
