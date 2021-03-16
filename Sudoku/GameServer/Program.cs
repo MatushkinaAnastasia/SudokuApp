@@ -1,8 +1,6 @@
 ﻿using GameServer.Tools;
-using Grpc.Net.Client;
 using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -30,9 +28,7 @@ namespace GameServer
 
 		private SudokuCell[,] _data;
 
-		private DateTime _lastSave = DateTime.Now;
-
-		private List<Client> _clients; //TODO: кункурентный лист сделать.
+		private List<Client> _clients;
 
 		public Program(IPAddress ip, int port, string nameOfRoom, string pathToFile)
 		{
@@ -44,7 +40,18 @@ namespace GameServer
 			_clients = new List<Client>();
 			_clientGrpc = new ClientGrpc();
 
-			var path = PathWorker.GetPath("pathToDB");
+
+			string path = "";
+			try
+			{
+				path = PathWorker.GetPath("pathToDB");
+			}
+			catch
+			{
+				Console.WriteLine("Неверный путь до базы данных. Скорректируйте его в конфигурационном файле и перезапустите.");
+				Console.ReadKey();
+				return;
+			}
 			var db = new DatabaseWorker(path);
 
 			Console.WriteLine(_pathToFile);
@@ -64,14 +71,23 @@ namespace GameServer
 		// entry point of program
 		private static void Main(string[] args)
 		{
-			var ip = IPAddress.Parse(args[0]);
-			var port = int.Parse(args[1]);
-			var nameOfRoom = args[2].Replace("_", " ");
+			IPAddress ip = NetworkUtils.GetMyIp();
+			int port = 1000;
+			string nameOfRoom = "noName";
 			string pathToFile = null;
-			if (args.Length == 4)
+			try
 			{
-				pathToFile = args[3].Replace("?", " ");
+				ip = IPAddress.Parse(args[0]);
+				port = int.Parse(args[1]);
+				nameOfRoom = args[2].Replace("_", " ");
+
+				if (args.Length == 4)
+				{
+					pathToFile = args[3].Replace("?", " ");
+				}
+
 			}
+			catch { }
 			var program = new Program(ip, port, nameOfRoom, pathToFile);
 
 			Console.CancelKeyPress += (sender, e) =>
@@ -125,7 +141,7 @@ namespace GameServer
 
 			switch (command)
 			{
-				case GameServerProtocol.Init: //Connect
+				case GameServerProtocol.Connect:
 					{
 						var client = GameServerProtocolWorker.GetClient(message, 1);
 						Console.WriteLine($"Клиент подключился. ip: {client.IP}, port: {client.Port}");
@@ -171,17 +187,7 @@ namespace GameServer
 								CheckClients();
 							}
 						}
-						
-						break;
-					}
-				case GameServerProtocol.Save:
-					{
-						if ((DateTime.Now - _lastSave) > TimeSpan.FromSeconds(5))
-						{
-							//TODO: try catch! return 1 and 0
-							WriteDataToFile();
-							_lastSave = DateTime.Now;
-						}
+
 						break;
 					}
 				case GameServerProtocol.Check:
@@ -298,17 +304,6 @@ namespace GameServer
 				Console.WriteLine("Файл пустой!");
 			}
 			return SudokuCellExtensions.ConvertToSudokuCellArray(byteData);
-		}
-
-		private void WriteDataToFile()
-		{
-			//using var streamWriter = new StreamWriter($"{_nameOfRoom}-{_lastSave.ToString().Replace(":", "_")}.sudoku");
-			using var streamWriter = new StreamWriter("save.sudoku");
-			var data = SudokuCellExtensions.ConvertToByteArray(_data);
-			var stringData = Encoding.UTF8.GetString(data);
-
-			streamWriter.Write(stringData);
-
 		}
 
 		private void SendMessageToAllClients(byte x, byte y, byte value)

@@ -50,12 +50,18 @@ namespace SudokuClient.Views
 			// Init field
 			var init = new byte[] { 0 };
 			var ipPortBytes = GameServerProtocolWorker.GetAddressBytes(_ip, _port);
-
-			var dataAndNameBytes = _socketClient.SendAndRecieve(init.Concat(ipPortBytes).ToArray());
-
-			(var data, var nameOfRoom) = GameServerProtocolWorker.ConvertToSudokuCellArrayAndRoomName(dataAndNameBytes);
-			_data = data;
-			_nameOfRoom = nameOfRoom;
+			try
+			{
+				var dataAndNameBytes = _socketClient.SendAndRecieve(init.Concat(ipPortBytes).ToArray());
+				(var data, var nameOfRoom) = GameServerProtocolWorker.ConvertToSudokuCellArrayAndRoomName(dataAndNameBytes);
+				_data = data;
+				_nameOfRoom = nameOfRoom;
+			} 
+			catch
+			{
+				MessageBox.Show("Не удается установить связь с игровым сервером.");
+				Close();
+			}
 			Title += $" - Комната: {_nameOfRoom}";
 			_tbs = GridCreator.CreateGrid(grid, ValueChanging);
 			FillTextBoxesWithData();

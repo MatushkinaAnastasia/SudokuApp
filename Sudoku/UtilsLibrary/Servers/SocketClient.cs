@@ -19,6 +19,10 @@ namespace UtilsLibrary.Servers
             try
             {
                 Socket socket = new Socket(_ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+                socket.ReceiveTimeout = 1000;
+                socket.SendTimeout = 1000;
+                
                 socket.Connect(_remoteEP);
 
                 socket.Send(data);
@@ -34,6 +38,7 @@ namespace UtilsLibrary.Servers
             catch (SocketException se)
             {
                 Console.WriteLine("SocketException : {0}", se.ToString());
+                throw;
             }
             catch (Exception e)
             {
@@ -47,6 +52,8 @@ namespace UtilsLibrary.Servers
             try
             {
                 socket = new Socket(_ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                socket.ReceiveTimeout = 1000;
+                socket.SendTimeout = 1000;
                 socket.Connect(_remoteEP);
 
                 socket.Send(data);

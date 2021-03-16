@@ -23,7 +23,8 @@
                   Grid.Column="1"
                   ItemsSource="{Binding Servers}" 
                   SelectionMode="Single"
-                  SelectedItem="{Binding SelectedServer}">
+                  SelectedItem="{Binding SelectedServer}"
+                  SelectionChanged="SelectionChanged">
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Название комнаты" 

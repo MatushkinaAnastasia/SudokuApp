@@ -18,6 +18,7 @@ namespace SudokuClient.Views
 		{
 			InitializeComponent();
 			_clientGrpc = new ClientGrpc();
+			tbip.Text = string.Empty;
 
 			DataContext = this;
 		}
@@ -29,16 +30,36 @@ namespace SudokuClient.Views
 
 		private void JoinToGame(object sender, RoutedEventArgs e)
 		{
-			if (SelectedServer == null)
+			//todo: сделать timeout
+			IPAddress ip;
+			int port;
+			try
 			{
-				MessageBox.Show("Выберите, пожалуйста, комнату :)");
+				var slices = tbip.Text.Split(":");
+				ip = IPAddress.Parse(slices[0]);
+				port = int.Parse(slices[1]);
+				if (port < 1 || port > 65535)
+				{
+					throw new System.Exception();
+				}
+			}
+			catch
+			{
+				MessageBox.Show("Выберите, пожалуйста, комнату или введите корректный адрес:)");
 				return;
 			}
-			var ip = IPAddress.Parse(SelectedServer.Ip);
-			var port = int.Parse(SelectedServer.Port);
+			
 			var client = new SocketClient(ip, port);
-			var game = new SudokuField(client); //todo: trycatch заход на несуществующий сервер
-			game.Show();
+			try
+			{
+				var game = new SudokuField(client);
+				game.Show();
+			} 
+			catch
+			{
+				MessageBox.Show("Кажется, такой комнаты уже нет :(");
+				return;
+			}
 			Close();
 		}
 
@@ -66,6 +87,14 @@ namespace SudokuClient.Views
 			var menu = new Menu();
 			menu.Show();
 			Close();
+		}
+
+		private void SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+		{
+			if (SelectedServer != null)
+			{
+				tbip.Text = $"{SelectedServer.Ip}:{SelectedServer.Port}";
+			}
 		}
 	}
 }
