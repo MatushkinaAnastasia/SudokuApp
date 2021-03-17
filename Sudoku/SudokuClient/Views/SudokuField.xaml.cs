@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using SudokuClient.Tools;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -57,7 +58,7 @@ namespace SudokuClient.Views
 				_data = data;
 				_nameOfRoom = nameOfRoom;
 			} 
-			catch
+			catch (Exception ex)
 			{
 				MessageBox.Show("Не удается установить связь с игровым сервером.");
 				Close();
@@ -128,7 +129,14 @@ namespace SudokuClient.Views
 
 			if (e.Key == Key.Back || e.Key == Key.Delete)
 			{
+				try
+				{
 				_socketClient.Send(new byte[] { 1, parameters.X, parameters.Y, 0 });
+				} catch
+				{
+					MessageBox.Show("Потеряно соединение с игровым сервером. Сохраните игру и пересоздайте комнату! Удачи");
+					return;
+				}
 			}
 			else
 			{
@@ -136,7 +144,14 @@ namespace SudokuClient.Views
 				|| (int)e.Key >= (int)Key.NumPad1 && (int)e.Key <= (int)Key.NumPad9)
 				{
 					var value = _keys[e.Key];
+					try
+					{
 					_socketClient.Send(new byte[] { 1, parameters.X, parameters.Y, value });
+					} catch
+					{
+						MessageBox.Show("Потеряно соединение с игровым сервером. Сохраните игру и пересоздайте комнату! Удачи");
+						return;
+					}
 				}
 			}
 		}
@@ -184,7 +199,14 @@ namespace SudokuClient.Views
 					}
 				case 2:
 					{
+						try
+						{
 						_socketClient.Send(new byte[] { 0 });
+						} catch
+						{
+							MessageBox.Show("Потеряно соединение с игровым сервером. Сохраните игру и пересоздайте комнату! Удачи");
+							return;
+						}
 						break;
 					}
 				default: break;
@@ -197,7 +219,13 @@ namespace SudokuClient.Views
 			var disconnect = new byte[] { (byte)GameServerProtocol.Disconnect };
 			var ipPortBytes = GameServerProtocolWorker.GetAddressBytes(_ip, _port);
 
+			try
+			{
 			_socketClient.Send(disconnect.Concat(ipPortBytes).ToArray());
+			} catch
+			{
+				return;
+			}
 		}
 
 		private void CheckAnswer(object sender, RoutedEventArgs e)

@@ -30,7 +30,6 @@ namespace SudokuClient.Views
 
 		private void JoinToGame(object sender, RoutedEventArgs e)
 		{
-			//todo: сделать timeout
 			IPAddress ip;
 			int port;
 			try
@@ -60,7 +59,6 @@ namespace SudokuClient.Views
 				MessageBox.Show("Кажется, такой комнаты уже нет :(");
 				return;
 			}
-			Close();
 		}
 
 		private void WindowLoaded(object sender, RoutedEventArgs e)
