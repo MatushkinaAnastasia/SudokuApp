@@ -10,7 +10,7 @@ namespace SudokuClient.Tools
 {
 	public static class GridCreator
 	{
-		public static TextBox[,] CreateGrid(Grid grid, Action<TextBox, KeyEventArgs> handler)
+		public static TextBox[,] InitializeButtonsGrid(this Grid grid, Action<TextBox, KeyEventArgs> handler)
 		{
 			const int _size = 9;
 			var tbs = new TextBox[_size, _size];

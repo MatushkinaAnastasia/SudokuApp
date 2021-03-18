@@ -5,8 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SudokuClient.Views"
         mc:Ignorable="d"
-        Title="Создание комнаты" Height="250" Width="450"
-        Closing="OnClosing">
+        Title="Создание комнаты" Height="250" Width="450">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="10"/>

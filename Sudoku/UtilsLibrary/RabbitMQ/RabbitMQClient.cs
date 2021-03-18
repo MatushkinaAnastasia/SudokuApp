@@ -5,7 +5,7 @@ namespace UtilsLibrary.RabbitMQ
 {
 	public class RabbitMQClient
 	{
-		private ConnectionFactory _factory;
+		private readonly ConnectionFactory _factory;
 		private const string ChatExchange = "chex";
 		public RabbitMQClient(string hostName)
 		{

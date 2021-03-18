@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.Net;
 using System.Windows;
 using UtilsLibrary.Grpc;
-using UtilsLibrary.Servers;
 
 namespace SudokuClient.Views
 {
@@ -30,35 +29,22 @@ namespace SudokuClient.Views
 
 		private void JoinToGame(object sender, RoutedEventArgs e)
 		{
-			IPAddress ip;
-			int port;
+			IPEndPoint address;
 			try
 			{
-				var slices = tbip.Text.Split(":");
-				ip = IPAddress.Parse(slices[0]);
-				port = int.Parse(slices[1]);
-				if (port < 1 || port > 65535)
-				{
-					throw new System.Exception();
-				}
+				//Hide();
+				address = IPEndPoint.Parse(tbip.Text.Trim());
 			}
 			catch
 			{
 				MessageBox.Show("Выберите, пожалуйста, комнату или введите корректный адрес:)");
 				return;
 			}
-			
-			var client = new SocketClient(ip, port);
-			try
-			{
-				var game = new SudokuField(client);
-				game.Show();
-			} 
-			catch
-			{
-				MessageBox.Show("Кажется, такой комнаты уже нет :(");
-				return;
-			}
+
+			var sudokuWindow = new SudokuWindow(address);
+			sudokuWindow.Closing += (s, e) => Show();
+			Hide();
+			sudokuWindow.Show();
 		}
 
 		private void WindowLoaded(object sender, RoutedEventArgs e)
@@ -76,14 +62,12 @@ namespace SudokuClient.Views
 			catch
 			{
 				Servers = new ObservableCollection<Server>();
-				MessageBox.Show("Потеряна связь с сервером :(");
+				MessageBox.Show("Потеряна связь с сервером. Введите адрес вручную :(");
 			}
 		}
 
 		private void BackToMenu(object sender, RoutedEventArgs e)
 		{
-			var menu = new Menu();
-			menu.Show();
 			Close();
 		}
 

@@ -1,11 +1,9 @@
 ﻿using Microsoft.Win32;
-using SudokuClient.Tools;
+using SudokuClient.GameUtils;
 using System;
-using System.IO;
-using System.Text;
 using System.Windows;
 using System.Windows.Media;
-using UtilsLibrary.Servers;
+using UtilsLibrary.Grpc;
 
 namespace SudokuClient.Views
 {
@@ -40,20 +38,9 @@ namespace SudokuClient.Views
 			nameOfRoom.Foreground = Brushes.Gray;
 		}
 
-		private bool _isGameStarted = false;
-
 		private void CreateRoom(object sender, RoutedEventArgs e)
 		{
 			StartGame(nameOfRoom.Text);
-		}
-
-		private void OnClosing(object sender, System.ComponentModel.CancelEventArgs e)
-		{
-			if (!_isGameStarted)
-			{
-				var menu = new Menu();
-				menu.Show();
-			}
 		}
 
 		private void LoadGame(object sender, RoutedEventArgs e)
@@ -72,22 +59,40 @@ namespace SudokuClient.Views
 
 		private void StartGame(string nameOfRoom, string path = "")
 		{
-			SocketClient socket;
-			try
+			if (nameOfRoom.Length > 30)
 			{
-				socket = GameServerComm.RunGameServer(nameOfRoom, path);
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show("Проблемы создания комнаты. Проверьте путь до gameserver.exe в конфигурационном файле.");
-				Console.WriteLine(ex.Message);
+				MessageBox.Show("Имя комнаты не должно превышать 30 символов");
 				return;
 			}
 
-			var game = new SudokuField(socket);
-			game.Show();
-			_isGameStarted = true;
-			Close();
+			var gameServerWrapper = new GameServerWrapper(nameOfRoom, path);
+			gameServerWrapper.Start();
+
+			var grpc = new ClientGrpc();
+			var sudokuWindow = new SudokuWindow(gameServerWrapper.IPEndPoint);
+
+			sudokuWindow.Loaded += async (s, e) =>
+			{
+				try
+				{
+					await grpc.SendRoom(nameOfRoom, gameServerWrapper.IPEndPoint.Address.ToString(), gameServerWrapper.IPEndPoint.Port.ToString());
+				}
+				catch { /*ignore*/ }
+			};
+
+			sudokuWindow.Closed += async (s, e) =>
+			{
+				gameServerWrapper?.Stop();
+				try
+				{
+					await grpc.DeleteServer(nameOfRoom, gameServerWrapper.IPEndPoint.Address.ToString(), gameServerWrapper.IPEndPoint.Port.ToString());
+				}
+				catch { /*ignore*/ }
+				Close();
+			};
+
+			Hide();
+			sudokuWindow.Show();
 		}
 	}
 }

@@ -1,9 +1,8 @@
-﻿using System;
+﻿using Grpc.Net.Client;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
-using Grpc.Net.Client;
 
 namespace UtilsLibrary.Grpc
 {
@@ -12,18 +11,12 @@ namespace UtilsLibrary.Grpc
 		private readonly string _ip;
 		private readonly string _port;
 		private readonly string _address;
-		
+
 		public ClientGrpc()
 		{
 			_ip = ConfigurationManager.AppSettings.Get("ipGrpc");
 			_port = ConfigurationManager.AppSettings.Get("portGrpc");
 			_address = $"http://{_ip}:{_port}";
-
-			Console.WriteLine("создание ClientGrpc");
-			Console.WriteLine(_ip);
-			Console.WriteLine(_port);
-			Console.WriteLine(_address);
-			Console.WriteLine("создание завершено");
 		}
 
 		public async Task<IsSuccecfull> SendRoom(string name, string ip, string port)
@@ -39,7 +32,7 @@ namespace UtilsLibrary.Grpc
 		{
 			using var channel = GrpcChannel.ForAddress(_address);
 			var client = new ServersListMaker.ServersListMakerClient(channel);
-			var reply = await client.ReturnServersListAsync(new RequestFromClient { ReqArg = ""});
+			var reply = await client.ReturnServersListAsync(new RequestFromClient { ReqArg = "" });
 
 			return reply.Servers_.ToList();
 		}

@@ -18,7 +18,7 @@
                    TextAlignment="Center"
                    FontSize="24"
                    Margin="20"
-                   Text="ЗДРАСЬЕ В ТОГЕТХЕРЕ ЛЮБИМОЕ СУДОКУ ЖДЕТ ВАС 24 часа">
+                   Text="Добро пожаловать в Sudoku Together! Любимое судоку ждет вас 24 часа">
         </TextBlock>
 
         <StackPanel Grid.Row="1" 
@@ -38,7 +38,7 @@
                     Click="OpenChat"/>
             <Button Content="Выход"
                     Style="{StaticResource ButtonMenu}"
-                    Click="Exit"/>
+                    Click="Exit" />
         </StackPanel>
     </Grid>
 </Window>

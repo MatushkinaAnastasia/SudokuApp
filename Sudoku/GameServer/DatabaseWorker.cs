@@ -8,7 +8,7 @@ namespace GameServer
 {
 	public class DatabaseWorker
 	{
-		private const byte _size = 9;
+		private const byte Size = 9;
 		private readonly string _connectionString;
 
 		public DatabaseWorker(string path)
@@ -34,11 +34,11 @@ namespace GameServer
 
 			string[] nine_lines = numbers.Split('!');
 
-			var data = new SudokuCell[_size, _size];
-			for (byte i = 0; i < _size; i++)
+			var data = new SudokuCell[Size, Size];
+			for (byte i = 0; i < Size; i++)
 			{
 				var t = nine_lines[i];
-				for (byte j = 0; j < _size; j++)
+				for (byte j = 0; j < Size; j++)
 				{
 					var symbol = t[j];
 					SudokuCell cell;

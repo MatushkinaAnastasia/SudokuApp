@@ -16,8 +16,33 @@ namespace UtilsLibrary
 
 		public static IPAddress GetMyIp()
 		{
-			var ip = Dns.GetHostEntry(Dns.GetHostName()).AddressList[1];
-			return ip;
+			var addressList = Dns.GetHostEntry(Dns.GetHostName()).AddressList;
+
+			foreach (var address in addressList)
+			{
+				if (address.AddressFamily == AddressFamily.InterNetwork)
+				{
+					return address;
+				}
+			}
+
+			return null;
+		}
+
+		public static byte[] ReadNBytes(this NetworkStream stream, int size)
+		{
+			byte[] bytes = new byte[size];
+			int readTotal = 0;
+			while (true)
+			{
+				int left = size - readTotal;
+				if (left <= 0)
+				{
+					break;
+				}
+				readTotal += stream.Read(bytes, readTotal, left);
+			}
+			return bytes;
 		}
 	}
 }

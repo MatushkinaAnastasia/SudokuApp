@@ -22,6 +22,7 @@
 
             <TextBox Grid.Row="0"
                      Width="200"
+                     MaxLength="30"
                      Foreground="Gray"
                      Text="Ваш никнейм для чата"
                      Name="nickname"/>
@@ -41,6 +42,7 @@
                  Name="messagesBox"
                  TextAlignment="Left"
                  VerticalContentAlignment="Top"
+                 TextWrapping="Wrap"
                  Padding="5"/>
 
 
@@ -51,9 +53,11 @@
             <ColumnDefinition Width="100"/>
         </Grid.ColumnDefinitions>
         <TextBox Grid.Column="0" 
-                  Height="20"
-                  Width="200"
-                  Name="enterBox"/>
+                 Height="20"
+                 Width="200"
+                 MaxLength="200"
+                 Name="enterBox"
+                 KeyDown="OnKeyDown"/>
             <Button Content="Отправить"
                     Click="SendMessage"
                     Grid.Column="1"

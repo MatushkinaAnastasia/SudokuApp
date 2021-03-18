@@ -14,15 +14,17 @@ namespace SudokuClient.Views
 		private void CreateGame(object sender, RoutedEventArgs e)
 		{
 			var createRoom = new CreatingRoom();
+			createRoom.Closing += (s, e) => Show();
+			Hide();
 			createRoom.Show();
-			Close();
 		}
 
 		private void JoinToGame(object sender, RoutedEventArgs e)
 		{
 			var joinRoom = new JoiningRoom();
+			joinRoom.Closing += (s, e) => Show();
+			Hide();
 			joinRoom.Show();
-			Close();
 		}
 		private void ShowRules(object sender, RoutedEventArgs e)
 		{

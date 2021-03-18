@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
-using UtilsLibrary;
 using UtilsLibrary.RabbitMQ;
 
 namespace SudokuClient.Views
@@ -13,8 +12,8 @@ namespace SudokuClient.Views
 	/// </summary>
 	public partial class ChatWindow : Window, IMessageHandler
 	{
-		private RabbitMQServer _server;
-		private RabbitMQClient _client;
+		private readonly RabbitMQServer _server;
+		private readonly RabbitMQClient _client;
 		private CancellationTokenSource _cancellationTokenSource;
 
 		private string _nickName = "";
@@ -54,10 +53,33 @@ namespace SudokuClient.Views
 			nickname.LostFocus -= AddText;
 		}
 
+
+		private bool _isConnectionExists = true;
 		private void SendMessage(object sender, RoutedEventArgs e)
 		{
-			_client.Send(enterBox.Text, _nickName);
-			enterBox.Text = "";
+			if (!string.IsNullOrEmpty(enterBox.Text) && !string.IsNullOrEmpty(_nickName))
+			{
+				try
+				{
+					_client.Send(enterBox.Text, _nickName);
+					if (!_isConnectionExists)
+					{
+						messagesBox.Text += "[соединение с сервером чата восстановлено]\n";
+
+						_cancellationTokenSource.Cancel();
+						_cancellationTokenSource.Dispose();
+						_cancellationTokenSource = new CancellationTokenSource();
+						Task.Run(() => _server.Run(this, _cancellationTokenSource.Token));
+					}
+					_isConnectionExists = true;
+				}
+				catch
+				{
+					messagesBox.Text += "[нет соединения с сервером чата]\n";
+					_isConnectionExists = false;
+				}
+				enterBox.Text = "";
+			}
 		}
 
 		public void Handle(string message)
@@ -76,6 +98,14 @@ namespace SudokuClient.Views
 			_nickName = nickname.Text;
 			MessageBox.Show($"Ваш никнейм {_nickName}");
 			nickname.Foreground = Brushes.Black;
+		}
+
+		private void OnKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+		{
+			if (e.Key == System.Windows.Input.Key.Enter)
+			{
+				SendMessage(null, null);
+			}
 		}
 	}
 }
