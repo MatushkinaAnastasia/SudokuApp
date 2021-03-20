@@ -3,7 +3,6 @@ using SudokuClient.GameUtils;
 using SudokuClient.GameUtils.Events;
 using SudokuClient.GameUtils.Messages;
 using SudokuClient.Tools;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -16,12 +15,12 @@ using UtilsLibrary.Data;
 
 namespace SudokuClient.Views
 {
-    /// <summary>
-    /// Логика взаимодействия для SudokuWindow.xaml
-    /// </summary>
-    public partial class SudokuWindow : Window
+	/// <summary>
+	/// Логика взаимодействия для SudokuWindow.xaml
+	/// </summary>
+	public partial class SudokuWindow : Window
     {
-        private GameClient _gameClient;
+        private readonly GameClient _gameClient;
         private const int Size = 9;
         private SudokuCell[,] _data;
         private TextBox[,] _tbs;
