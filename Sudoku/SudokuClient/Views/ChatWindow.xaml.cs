@@ -28,11 +28,14 @@ namespace SudokuClient.Views
 			_server = new RabbitMQServer(hostName);
 			_client = new RabbitMQClient(hostName);
 			_cancellationTokenSource = new CancellationTokenSource();
-			try
+			Task.Run(() =>
 			{
-				Task.Run(() => _server.Run(this, _cancellationTokenSource.Token));
-			}
-			catch { }
+				try
+				{
+					_server.Run(this, _cancellationTokenSource.Token);
+				}
+				catch { }
+			});
 		}
 
 		private void RemoveText(object sender, RoutedEventArgs e)
@@ -73,7 +76,14 @@ namespace SudokuClient.Views
 						_cancellationTokenSource.Cancel();
 						_cancellationTokenSource.Dispose();
 						_cancellationTokenSource = new CancellationTokenSource();
-						Task.Run(() => _server.Run(this, _cancellationTokenSource.Token));
+						Task.Run(() =>
+						{
+							try
+							{
+								_server.Run(this, _cancellationTokenSource.Token);
+							}
+							catch { }
+						});
 					}
 					_isConnectionExists = true;
 				}

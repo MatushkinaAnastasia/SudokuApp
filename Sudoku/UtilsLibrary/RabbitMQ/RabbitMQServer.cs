@@ -1,6 +1,7 @@
 ﻿using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
+using System.Configuration;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,7 +14,9 @@ namespace UtilsLibrary.RabbitMQ
         private const string ChatExchange = "chex";
         public RabbitMQServer(string hostName)
         {
-            _factory = new ConnectionFactory() { HostName = hostName, UserName = "trrp4", Password = "trrp4" };
+            var username = ConfigurationManager.AppSettings.Get("usernameMQ");
+            var password = ConfigurationManager.AppSettings.Get("passwordMQ");
+            _factory = new ConnectionFactory() { HostName = hostName, UserName = username, Password = password };
         }
 
         public async void Run(IMessageHandler handler, CancellationToken cancellationToken)
