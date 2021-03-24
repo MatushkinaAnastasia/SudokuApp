@@ -28,7 +28,11 @@ namespace SudokuClient.Views
 			_server = new RabbitMQServer(hostName);
 			_client = new RabbitMQClient(hostName);
 			_cancellationTokenSource = new CancellationTokenSource();
-			Task.Run(() => _server.Run(this, _cancellationTokenSource.Token));
+			try
+			{
+				Task.Run(() => _server.Run(this, _cancellationTokenSource.Token));
+			}
+			catch { }
 		}
 
 		private void RemoveText(object sender, RoutedEventArgs e)
@@ -80,11 +84,16 @@ namespace SudokuClient.Views
 				}
 				enterBox.Text = "";
 			}
+			else
+			{
+				MessageBox.Show("Введите, пожалуйста, никнейм.");
+			}
 		}
 
 		public void Handle(string message)
 		{
 			var arr = message.Split("`");
+
 			Dispatcher.Invoke(() => messagesBox.Text += $"({arr[1]}): {arr[0]} \n");
 		}
 

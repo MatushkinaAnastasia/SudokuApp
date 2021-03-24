@@ -1,4 +1,5 @@
 ﻿using RabbitMQ.Client;
+using System.Configuration;
 using System.Text;
 
 namespace UtilsLibrary.RabbitMQ
@@ -9,7 +10,9 @@ namespace UtilsLibrary.RabbitMQ
 		private const string ChatExchange = "chex";
 		public RabbitMQClient(string hostName)
 		{
-			_factory = new ConnectionFactory() { HostName = hostName, UserName = "trrp4", Password = "trrp4" };
+			var username = ConfigurationManager.AppSettings.Get("usernameMQ");
+			var password = ConfigurationManager.AppSettings.Get("passwordMQ");
+			_factory = new ConnectionFactory() { HostName = hostName, UserName = username, Password = password };
 		}
 
 		public void Send(string message, string nickname)

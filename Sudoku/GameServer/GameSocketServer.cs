@@ -91,7 +91,6 @@ namespace GameServer
             _listener.Dispose();
         }
 
-
         private void ElementChanged(object sender, ElementChangingEventArgs e)
         {
             var x = e.X;
